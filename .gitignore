@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 环境变量与密钥（永远不要提交）
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
+# 日志
+*.log
