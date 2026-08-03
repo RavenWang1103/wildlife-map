@@ -9,10 +9,31 @@
   <script src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>
   <script src="https://registry.npmmirror.com/chart.js/4.4.1/files/dist/chart.umd.js"></script>
   <style>
+    /* ===== 主题变量（浅色 / 深色） ===== */
+    :root {
+      --bg: #f5f1e8;          --tx: #2f2a25;      --tx-2: #5f584c;   --tx-3: #9a917f;
+      --tx-head: #1b4332;     --tx-green: #2d6a4f; --tx-green-2: #4b7a5c; --tx-amber: #8a5a3a;
+      --bg-card: #ffffff;     --bg-panel: #faf7ef; --bg-soft: #ece5d6;  --bg-map: #edf3e6;
+      --bg-hover: #f0ead9;    --bg-green-soft: #eef4e6; --bg-green-soft2: #dcecd8;
+      --bg-amber-soft: #f5efe3; --br: #e5dcc9;     --br-2: #ece4d5;
+      --map-muted: #e6ebdf;   --map-label: #3a443c; --chart-grid: #f0ead9;
+      --chart-border: #faf7ef; --scroll-thumb: #cfc4a8;
+    }
+    html.dark {
+      --bg: #141a15;          --tx: #e8e4d9;      --tx-2: #c3bbaa;   --tx-3: #8b8474;
+      --tx-head: #a3d4ae;     --tx-green: #93c69e; --tx-green-2: #7fae8d; --tx-amber: #d3a97a;
+      --bg-card: #1e2620;     --bg-panel: #181e19; --bg-soft: #29332b;  --bg-map: #171f19;
+      --bg-hover: #2b352d;    --bg-green-soft: #22362a; --bg-green-soft2: #2a4030;
+      --bg-amber-soft: #3a2f20; --br: #333e35;     --br-2: #2d3830;
+      --map-muted: #1d261f;   --map-label: #9db5a3; --chart-grid: #33402f; --chart-border: #181e19;
+      --scroll-thumb: #4a5548;
+    }
+    html { transition: background-color .25s ease; }
+    body { transition: background-color .25s ease, color .25s ease; }
     html, body { height: 100%; }
-    #panel::-webkit-scrollbar, #searchDropdown::-webkit-scrollbar, #categoryModal .modal-body::-webkit-scrollbar, #drawerBody::-webkit-scrollbar { width: 6px; }
-    #panel::-webkit-scrollbar-thumb, #searchDropdown::-webkit-scrollbar-thumb, #categoryModal .modal-body::-webkit-scrollbar-thumb, #drawerBody::-webkit-scrollbar-thumb { background: #cfc4a8; border-radius: 3px; }
-    #panel::-webkit-scrollbar-track, #searchDropdown::-webkit-scrollbar-track, #categoryModal .modal-body::-webkit-scrollbar-track, #drawerBody::-webkit-scrollbar-track { background: transparent; }
+    #panel::-webkit-scrollbar, #searchDropdown::-webkit-scrollbar, #categoryModal .modal-body::-webkit-scrollbar, #drawerBody::-webkit-scrollbar, #compareBody::-webkit-scrollbar { width: 6px; }
+    #panel::-webkit-scrollbar-thumb, #searchDropdown::-webkit-scrollbar-thumb, #categoryModal .modal-body::-webkit-scrollbar-thumb, #drawerBody::-webkit-scrollbar-thumb, #compareBody::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
+    #panel::-webkit-scrollbar-track, #searchDropdown::-webkit-scrollbar-track, #categoryModal .modal-body::-webkit-scrollbar-track, #drawerBody::-webkit-scrollbar-track, #compareBody::-webkit-scrollbar-track { background: transparent; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
     .fade-up { animation: fadeUp .35s ease both; }
     @keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
@@ -21,6 +42,7 @@
     .fade-in { animation: fadeIn .25s ease both; }
     #mapChart { width: 100%; height: 100%; }
     .img-wrap { background: radial-gradient(circle at 30% 30%, #dce8d2 0%, #eef4e6 45%, #e2e9d9 100%); }
+    html.dark .img-wrap { background: radial-gradient(circle at 30% 30%, #22332a 0%, #2b3d30 45%, #223028 100%); }
     .img-wrap::after {
       content: "🌿"; display: flex; align-items: center; justify-content: center;
       width: 100%; height: 100%; font-size: 26px; color: #8aa97e; opacity: 0.55;
@@ -29,12 +51,12 @@
     .img-wrap.no-img img { display: none; }
   </style>
 </head>
-<body class="bg-[#f5f1e8] text-[#2f2a25] lg:overflow-hidden">
+<body class="bg-[var(--bg)] text-[var(--tx)] lg:overflow-hidden">
 
   <!-- ===== 顶部固定导航栏 ===== -->
   <header class="fixed top-0 inset-x-0 z-50 bg-[#1b4332] text-[#f6f3ec] shadow-lg shadow-[#1b4332]/20">
     <div class="max-w-[1680px] mx-auto px-4 py-2 md:py-0 md:h-14 flex flex-col md:flex-row md:items-center gap-2">
-      <!-- 第一行：标题 + 按种类查看 -->
+      <!-- 第一行：标题 + 按种类查看 + 深色模式 -->
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-2.5 min-w-0">
           <svg class="w-7 h-7 shrink-0 text-[#a8d5ba]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -46,31 +68,43 @@
             <p class="text-[11px] text-[#a7c4bc] hidden sm:block" id="navSub">国家保护野生动物 · 省级分布概况</p>
           </div>
         </div>
-        <!-- 按种类查看 -->
-        <div class="relative shrink-0">
-          <button id="catBtn" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#2d6a4f] hover:bg-[#35805f] transition">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/>
-            </svg>
-            按种类
-          </button>
-          <div id="catDropdown" class="hidden absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-xl border border-[#e5dcc9] overflow-hidden z-50">
-            <div id="catDropdownList" class="py-1 max-h-[60vh] overflow-y-auto"></div>
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- 按种类查看 -->
+          <div class="relative">
+            <button id="catBtn" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-[#2d6a4f] hover:bg-[#35805f] transition">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/>
+              </svg>
+              按种类
+            </button>
+            <div id="catDropdown" class="hidden absolute right-0 top-full mt-2 w-44 bg-[var(--bg-card)] rounded-xl shadow-xl border border-[var(--br)] overflow-hidden z-50">
+              <div id="catDropdownList" class="py-1 max-h-[60vh] overflow-y-auto"></div>
+            </div>
           </div>
+          <!-- 深色模式切换 -->
+          <button id="themeBtn" title="切换深色模式"
+            class="flex items-center justify-center w-8 h-8 rounded-full bg-[#2d6a4f] hover:bg-[#35805f] transition">
+            <svg id="themeSun" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>
+            </svg>
+            <svg id="themeMoon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>
+            </svg>
+          </button>
         </div>
       </div>
       <!-- 第二行：搜索框 -->
       <div class="relative w-full md:w-72 md:ml-3">
-        <div class="flex items-center gap-2 bg-[#f6f3ec] rounded-full px-3 py-1.5">
-          <svg class="w-4 h-4 text-[#8a8175] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <div class="flex items-center gap-2 bg-[var(--bg-card)] rounded-full px-3 py-1.5 border border-[var(--br)]">
+          <svg class="w-4 h-4 text-[var(--tx-3)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
           </svg>
           <input id="searchInput" type="text" placeholder="搜索保护动物（如：雪豹 / 大熊猫）"
-                 class="w-full bg-transparent text-sm text-[#2f2a25] placeholder-[#9a917f] outline-none"
+                 class="w-full bg-transparent text-sm text-[var(--tx)] placeholder-[var(--tx-3)] outline-none"
                  autocomplete="off">
         </div>
         <!-- 搜索下拉结果 -->
-        <div id="searchDropdown" class="hidden absolute top-full mt-2 w-full md:w-80 right-0 bg-white rounded-xl shadow-xl border border-[#e5dcc9] overflow-y-auto max-h-80 z-50"></div>
+        <div id="searchDropdown" class="hidden absolute top-full mt-2 w-full md:w-80 right-0 bg-[var(--bg-card)] rounded-xl shadow-xl border border-[var(--br)] overflow-y-auto max-h-80 z-50"></div>
       </div>
     </div>
   </header>
@@ -79,8 +113,14 @@
   <main class="pt-[100px] md:pt-14 flex flex-col lg:h-[calc(100vh-56px)] lg:flex-row">
 
     <!-- 左：地图 -->
-    <section class="relative w-full lg:w-[70%] h-[50vh] lg:h-full bg-[#edf3e6]">
+    <section class="relative w-full lg:w-[70%] h-[50vh] lg:h-full bg-[var(--bg-map)]">
       <div id="mapChart"></div>
+
+      <!-- 地图模式切换（物种数量 / 濒危物种） -->
+      <div class="absolute top-3 left-3 z-20 flex items-center gap-1 bg-[var(--bg-card)]/90 backdrop-blur rounded-full p-1 shadow border border-[var(--br)]">
+        <button id="modeCountBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition">物种数量</button>
+        <button id="modeRiskBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition">濒危热力</button>
+      </div>
 
       <!-- 单物种高亮提示条 -->
       <div id="highlightBanner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-[#1b4332]/95 text-[#f6f3ec] text-xs rounded-full pl-4 pr-2 py-1.5 shadow-lg flex items-center gap-3">
@@ -88,14 +128,14 @@
         <button id="clearHighlight" class="text-[#a8d5ba] hover:text-white text-[11px] font-medium px-2 py-0.5 rounded-full hover:bg-white/10 transition">✕ 清除</button>
       </div>
 
-      <div id="mapLoading" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#edf3e6]/85 text-[#5f7a52] text-sm z-10">
+      <div id="mapLoading" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[var(--bg-map)]/85 text-[#5f7a52] text-sm z-10">
         <svg class="w-7 h-7 animate-spin" viewBox="0 0 24 24" fill="none">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3.5"/>
           <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v3a5 5 0 0 0-5 5H4z"/>
         </svg>
         <span>地图数据加载中…</span>
       </div>
-      <div id="mapError" class="hidden absolute inset-0 flex-col items-center justify-center gap-3 bg-[#edf3e6]/85 text-[#8a5a3a] text-sm z-10">
+      <div id="mapError" class="hidden absolute inset-0 flex-col items-center justify-center gap-3 bg-[var(--bg-map)]/85 text-[#8a5a3a] text-sm z-10">
         <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
           <path d="M12 9v4"/><path d="M12 17h.01"/>
           <path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0z"/>
@@ -106,10 +146,10 @@
     </section>
 
     <!-- 右：面板（物种分布 / 统计分析） -->
-    <aside id="panel" class="w-full lg:w-[30%] lg:h-full lg:overflow-y-auto bg-[#faf7ef] lg:border-l lg:border-[#e5dcc9]">
+    <aside id="panel" class="w-full lg:w-[30%] lg:h-full lg:overflow-y-auto bg-[var(--bg-panel)] lg:border-l lg:border-[var(--br)]">
       <div class="p-4 md:p-6 pb-8">
         <!-- Tab 切换 -->
-        <div class="flex items-center gap-1 bg-[#ece5d6] rounded-full p-1 w-fit">
+        <div class="flex items-center gap-1 bg-[var(--bg-soft)] rounded-full p-1 w-fit">
           <button data-tab="list" class="tab-btn text-xs font-medium px-4 py-1.5 rounded-full transition">物种分布</button>
           <button data-tab="stats" class="tab-btn text-xs font-medium px-4 py-1.5 rounded-full transition">统计分析</button>
         </div>
@@ -117,30 +157,50 @@
         <!-- Tab1：物种分布 -->
         <div id="tabList">
           <div class="mt-4 flex items-center justify-between gap-3">
-            <h2 id="provinceName" class="text-lg md:text-xl font-bold text-[#1b4332]">四川省</h2>
-            <span id="provinceCount" class="shrink-0 text-xs font-medium text-[#1b4332] bg-[#dcecd8] px-3 py-1 rounded-full whitespace-nowrap">-- 种保护动物</span>
+            <h2 id="provinceName" class="text-lg md:text-xl font-bold text-[var(--tx-head)]">四川省</h2>
+            <span id="provinceCount" class="shrink-0 text-xs font-medium text-[var(--tx-head)] bg-[var(--bg-green-soft2)] px-3 py-1 rounded-full whitespace-nowrap">-- 种保护动物</span>
           </div>
-          <p class="mt-2 text-xs text-[#9a917f]">点击左侧地图省份，查看该省保护动物分布</p>
+          <p class="mt-2 text-xs text-[var(--tx-3)]">点击左侧地图省份，查看该省保护动物分布</p>
+          <!-- 省份物种构成（一级 / 二级） -->
+          <div class="mt-3 flex items-center gap-4 bg-[var(--bg-card)] rounded-2xl border border-[var(--br-2)] p-3">
+            <div class="relative w-16 h-16 shrink-0">
+              <canvas id="provPie"></canvas>
+              <span id="provPieTotal" class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--tx-2)]">--</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-[var(--tx-head)]">本省保护级别构成</div>
+              <div class="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#1b4332]"></span>
+                <span class="text-[var(--tx-2)]">一级</span>
+                <span id="provPieLv1" class="font-bold text-[var(--tx)]">--</span>
+                <span class="mx-1 text-[var(--tx-3)]">·</span>
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#e3c9a2]"></span>
+                <span class="text-[var(--tx-2)]">二级</span>
+                <span id="provPieLv2" class="font-bold text-[var(--tx)]">--</span>
+              </div>
+              <p class="mt-1 text-[10.5px] text-[var(--tx-3)]">一级多为珍稀濒危，保护优先级更高</p>
+            </div>
+          </div>
           <div id="filterBar" class="mt-4 flex items-center gap-2">
             <button data-lv="全部" class="lv-chip px-3 py-1 text-xs rounded-full border transition">全部</button>
             <button data-lv="一级" class="lv-chip px-3 py-1 text-xs rounded-full border transition">一级</button>
             <button data-lv="二级" class="lv-chip px-3 py-1 text-xs rounded-full border transition">二级</button>
           </div>
           <div id="animalCards" class="mt-4 space-y-3"></div>
-          <div id="panelLoading" class="py-16 text-center text-sm text-[#9a917f]">物种数据加载中…</div>
+          <div id="panelLoading" class="py-16 text-center text-sm text-[var(--tx-3)]">物种数据加载中…</div>
         </div>
 
         <!-- Tab2：统计分析 -->
         <div id="tabStats" class="hidden mt-4">
-          <h3 class="text-sm font-bold text-[#1b4332]">各省保护动物数量排名</h3>
-          <p class="text-[11px] text-[#9a917f] mt-0.5">点击柱子可切换到该省份</p>
-          <div class="mt-2 bg-white rounded-2xl border border-[#ece4d5] p-3 h-[380px]"><canvas id="rankChart"></canvas></div>
-          <h3 class="mt-5 text-sm font-bold text-[#1b4332]">物种类别构成</h3>
-          <p class="text-[11px] text-[#9a917f] mt-0.5">点击扇区可查看该类别物种</p>
-          <div class="mt-2 bg-white rounded-2xl border border-[#ece4d5] p-3 h-[320px]"><canvas id="catChart"></canvas></div>
+          <h3 class="text-sm font-bold text-[var(--tx-head)]">各省保护动物数量排名</h3>
+          <p class="text-[11px] text-[var(--tx-3)] mt-0.5">点击柱子可切换到该省份</p>
+          <div class="mt-2 bg-[var(--bg-card)] rounded-2xl border border-[var(--br-2)] p-3 h-[380px]"><canvas id="rankChart"></canvas></div>
+          <h3 class="mt-5 text-sm font-bold text-[var(--tx-head)]">物种类别构成</h3>
+          <p class="text-[11px] text-[var(--tx-3)] mt-0.5">点击扇区可查看该类别物种</p>
+          <div class="mt-2 bg-[var(--bg-card)] rounded-2xl border border-[var(--br-2)] p-3 h-[320px]"><canvas id="catChart"></canvas></div>
         </div>
 
-        <p class="mt-6 text-[10.5px] leading-relaxed text-[#b0a68f]">
+        <p class="mt-6 text-[10.5px] leading-relaxed text-[var(--tx-3)]">
           物种图片与简介来源于维基百科（遵循 CC BY-SA 4.0 及其各自授权）；物种名录依据 2021 版《国家重点保护野生动物名录》；IUCN 等级与学名来源于维基数据；省级分布为公开资料整理，仅供科普展示。
         </p>
       </div>
@@ -150,13 +210,13 @@
   <!-- ===== 按种类浏览 Modal ===== -->
   <div id="categoryModal" class="hidden fixed inset-0 z-[60]">
     <div class="absolute inset-0 bg-black/40 fade-in" data-close-modal></div>
-    <div class="absolute inset-x-0 bottom-0 md:inset-x-auto md:right-0 md:top-0 md:bottom-0 md:w-[560px] bg-[#faf7ef] md:rounded-l-3xl shadow-2xl flex flex-col md:max-h-full max-h-[85vh] rounded-t-3xl">
-      <div class="flex items-center justify-between px-5 py-4 border-b border-[#e5dcc9] shrink-0">
+    <div class="absolute inset-x-0 bottom-0 md:inset-x-auto md:right-0 md:top-0 md:bottom-0 md:w-[560px] bg-[var(--bg-panel)] md:rounded-l-3xl shadow-2xl flex flex-col md:max-h-full max-h-[85vh] rounded-t-3xl">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--br)] shrink-0">
         <div>
-          <h3 id="modalTitle" class="font-bold text-[#1b4332] text-lg">哺乳动物</h3>
-          <p id="modalCount" class="text-[11px] text-[#9a917f]">0 种</p>
+          <h3 id="modalTitle" class="font-bold text-[var(--tx-head)] text-lg">哺乳动物</h3>
+          <p id="modalCount" class="text-[11px] text-[var(--tx-3)]">0 种</p>
         </div>
-        <button data-close-modal class="w-8 h-8 rounded-full bg-[#ece5d6] hover:bg-[#e0d6c0] flex items-center justify-center text-[#5f584c] transition">✕</button>
+        <button data-close-modal class="w-8 h-8 rounded-full bg-[var(--bg-soft)] hover:bg-[var(--bg-hover)] flex items-center justify-center text-[var(--tx-2)] transition">✕</button>
       </div>
       <div class="modal-body flex-1 overflow-y-auto p-4">
         <div id="modalGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
@@ -167,23 +227,23 @@
   <!-- ===== 物种详情抽屉 ===== -->
   <div id="drawer" class="hidden fixed inset-0 z-[70]">
     <div class="absolute inset-0 bg-black/40 fade-in" data-close-drawer></div>
-    <div id="drawerBody" class="absolute right-0 top-0 bottom-0 w-full md:w-[440px] bg-white shadow-2xl drawer-open flex flex-col overflow-y-auto">
+    <div id="drawerBody" class="absolute right-0 top-0 bottom-0 w-full md:w-[440px] bg-[var(--bg-card)] shadow-2xl drawer-open flex flex-col overflow-y-auto">
       <!-- 封面图 -->
       <div id="drawerImg" class="h-56 w-full shrink-0 img-wrap"></div>
       <button data-close-drawer class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition">✕</button>
       <div class="p-5 pb-8">
         <div class="flex items-start justify-between gap-3">
-          <h3 id="drawerName" class="text-xl font-bold text-[#1b4332]">雪豹</h3>
+          <h3 id="drawerName" class="text-xl font-bold text-[var(--tx-head)]">雪豹</h3>
           <span id="drawerLevel" class="shrink-0 text-xs font-medium px-3 py-1 rounded-full bg-[#1b4332] text-white">国家一级</span>
         </div>
-        <div id="drawerLatin" class="mt-1 text-[13px] text-[#7d7568] italic">Panthera uncia · Snow Leopard</div>
+        <div id="drawerLatin" class="mt-1 text-[13px] text-[var(--tx-3)] italic">Panthera uncia · Snow Leopard</div>
         <div id="drawerTags" class="mt-3 flex flex-wrap gap-2">
-          <span id="drawerCat" class="text-[11px] px-2.5 py-1 rounded-full bg-[#eef4e6] text-[#4b7a5c]">哺乳动物</span>
-          <span id="drawerIucn" class="text-[11px] px-2.5 py-1 rounded-full bg-[#f5efe3] text-[#8a5a3a]">IUCN 易危</span>
+          <span id="drawerCat" class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green-2)]">哺乳动物</span>
+          <span id="drawerIucn" class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]">IUCN 易危</span>
         </div>
-        <p id="drawerDesc" class="mt-4 text-[13.5px] leading-relaxed text-[#5f584c] whitespace-pre-line"></p>
+        <p id="drawerDesc" class="mt-4 text-[13.5px] leading-relaxed text-[var(--tx-2)] whitespace-pre-line"></p>
         <div class="mt-5">
-          <div class="text-xs font-bold text-[#1b4332] mb-2">分布省份（<span id="drawerProvCount">0</span>）</div>
+          <div class="text-xs font-bold text-[var(--tx-head)] mb-2">分布省份（<span id="drawerProvCount">0</span>）</div>
           <div id="drawerProvs" class="flex flex-wrap gap-1.5"></div>
         </div>
         <div class="mt-6 flex items-center gap-3">
@@ -191,6 +251,24 @@
              class="flex-1 text-center text-sm font-medium px-4 py-2.5 rounded-full bg-[#1b4332] text-white hover:bg-[#2d6a4f] transition">维基百科详情 ↗</a>
           <button id="drawerViewDist" class="flex-1 text-sm font-medium px-4 py-2.5 rounded-full bg-[#e3c9a2] text-[#5a432a] hover:bg-[#d9ba8a] transition">在地图上查看</button>
         </div>
+        <button id="drawerCompare" class="mt-3 w-full text-sm font-medium px-4 py-2.5 rounded-full border border-[var(--br)] text-[var(--tx-2)] hover:bg-[var(--bg-soft)] transition">＋ 加入对比（最多 2 个物种）</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 物种对比 Modal ===== -->
+  <div id="compareModal" class="hidden fixed inset-0 z-[80]">
+    <div class="absolute inset-0 bg-black/50 fade-in" data-close-compare></div>
+    <div class="absolute inset-x-0 bottom-0 md:inset-x-auto md:right-0 md:top-0 md:bottom-0 md:w-[720px] bg-[var(--bg-panel)] md:rounded-l-3xl shadow-2xl flex flex-col md:max-h-full max-h-[90vh] rounded-t-3xl">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--br)] shrink-0">
+        <div>
+          <h3 class="font-bold text-[var(--tx-head)] text-lg">物种对比</h3>
+          <p class="text-[11px] text-[var(--tx-3)]">并排对比两种保护动物的特征与分布</p>
+        </div>
+        <button data-close-compare class="w-8 h-8 rounded-full bg-[var(--bg-soft)] hover:bg-[var(--bg-hover)] flex items-center justify-center text-[var(--tx-2)] transition">✕</button>
+      </div>
+      <div id="compareBody" class="flex-1 overflow-y-auto p-4">
+        <div id="compareGrid" class="grid grid-cols-2 gap-3"></div>
       </div>
     </div>
   </div>
@@ -208,17 +286,43 @@
       "VU": "bg-[#b45309] text-white", "NT": "bg-[#8a9a5b] text-white",
       "LC": "bg-[#4b7a5c] text-white", "DD": "bg-[#a3a396] text-white", "NE": "bg-[#a3a396] text-white"
     };
+    const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-    let species = [], byProvince = {}, countByProvince = {}, geo = null;
+    let species = [], byProvince = {}, countByProvince = {}, riskCount = {}, geo = null;
     let currentProvince = DEFAULT_PROVINCE, levelFilter = "全部";
-    let chart = null, rankChart = null, catChart = null, highlightSpecies = null;
+    let chart = null, rankChart = null, catChart = null, provPieChart = null, highlightSpecies = null;
+    let mapMode = "count";               // 地图模式：count 物种数量 / risk 濒危热力
+    let compareList = [];                // 对比列表（最多 2 个）
+
+    /* ==================== 主题（深色模式） ==================== */
+    function applyTheme(dark) {
+      document.documentElement.classList.toggle("dark", dark);
+      document.getElementById("themeSun").classList.toggle("hidden", !dark);
+      document.getElementById("themeMoon").classList.toggle("hidden", dark);
+      localStorage.setItem("wm-theme", dark ? "dark" : "light");
+      // 图表颜色依赖 CSS 变量，切换后重建
+      if (rankChart || catChart) { rankChart = catChart = null; if (currentTab === "stats") renderStats(); }
+      if (provPieChart) renderProvPie();
+      if (chart && geo) { chart.dispose(); chart = null; renderChart(); applyHighlight(); }
+    }
+    document.getElementById("themeBtn").addEventListener("click", function () {
+      applyTheme(!document.documentElement.classList.contains("dark"));
+    });
+    (function () {
+      const saved = localStorage.getItem("wm-theme");
+      const dark = saved ? saved === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (dark) { document.documentElement.classList.add("dark");
+        document.getElementById("themeSun").classList.remove("hidden");
+        document.getElementById("themeMoon").classList.add("hidden"); }
+    })();
 
     /* ==================== 数据索引 ==================== */
     function buildIndex(list) {
-      byProvince = {}; countByProvince = {};
+      byProvince = {}; countByProvince = {}; riskCount = {};
       for (const s of list) for (const p of s.provinces) {
         (byProvince[p] = byProvince[p] || []).push(s);
         countByProvince[p] = (countByProvince[p] || 0) + 1;
+        if (s.iucn === "CR" || s.iucn === "EN") riskCount[p] = (riskCount[p] || 0) + 1;
       }
     }
     const displayName = n => DISPLAY[n] || n;
@@ -229,25 +333,42 @@
     // 构建完整地图 option；withVmap=false 时不带 visualMap，
     // 避免其颜色映射在渲染层覆盖 itemStyle.areaColor（ECharts visualMap 优先级更高）
     function buildMapOption(withVmap) {
+      const useRisk = mapMode === "risk";
       const data = geo.features.map(f => {
         const name = f.properties.name;
-        if (!highlightSpecies) return { name, value: countByProvince[name] || 0 };
-        const hit = highlightSpecies.provinces.includes(name);
-        return hit
-          ? { name, value: countByProvince[name] || 1, itemStyle: { areaColor: "#14532d" } }
-          : { name, value: 0, itemStyle: { areaColor: "#e6ebdf" } };
+        if (highlightSpecies) {
+          const hit = highlightSpecies.provinces.includes(name);
+          return hit
+            ? { name, value: countByProvince[name] || 1, itemStyle: { areaColor: "#14532d" } }
+            : { name, value: 0, itemStyle: { areaColor: cssVar("--map-muted") } };
+        }
+        const base = useRisk ? riskCount[name] || 0 : countByProvince[name] || 0;
+        return { name, value: base };
       });
+      const maxV = useRisk
+        ? Math.max.apply(null, Object.values(riskCount).concat([0])) || 1
+        : Math.max.apply(null, Object.values(countByProvince)) || 1;
+      const range = useRisk
+        ? { text: ["极危/濒危多", "少"], colors: ["#fdece3", "#f7c9b3", "#e8895e", "#c94f30", "#8c1c13"] }
+        : { text: ["物种丰富", "稀少"], colors: ["#eef4e6", "#c9e3c4", "#8ec592", "#4b9d63", "#1e6f43"] };
       return {
+        tooltip: {
+          trigger: "item", backgroundColor: "rgba(27,67,50,0.95)", borderColor: "#1b4332",
+          padding: [8, 12], textStyle: { color: "#f6f3ec", fontSize: 12 },
+          formatter: p => "<strong>" + p.name + "</strong><br/>" +
+            (mapMode === "risk" ? "极危/濒危物种：" + (riskCount[p.name] || 0) + " 种"
+                                : "保护动物：" + (countByProvince[p.name] || 0) + " 种")
+        },
         visualMap: withVmap ? {
-          min: 0, max: Math.max.apply(null, Object.values(countByProvince)) || 1,
+          min: 0, max: maxV,
           left: 16, bottom: 16, orient: "vertical", itemWidth: 12, itemHeight: 90,
-          text: ["物种丰富", "稀少"], textGap: 12, textStyle: { color: "#6b6359", fontSize: 11 },
-          inRange: { color: ["#eef4e6", "#c9e3c4", "#8ec592", "#4b9d63", "#1e6f43"] }
+          text: range.text, textGap: 12, textStyle: { color: cssVar("--tx-3"), fontSize: 11 },
+          inRange: { color: range.colors }
         } : undefined,
         series: [{
           type: "map", map: "china", roam: true, selectedMode: false,
-          label: { show: true, color: "#3a443c", fontSize: 10 },
-          itemStyle: { borderColor: "#ffffff", borderWidth: 1, areaColor: "#eef4e6" },
+          label: { show: true, color: cssVar("--map-label"), fontSize: 10 },
+          itemStyle: { borderColor: "#ffffff", borderWidth: 1, areaColor: cssVar("--map-muted") },
           emphasis: { label: { show: true, color: "#ffffff", fontWeight: "bold" },
             itemStyle: { areaColor: "#14532d", shadowBlur: 12, shadowColor: "rgba(0,0,0,0.25)" } },
           data
@@ -286,30 +407,49 @@
 
     function cardHTML(s) {
       const wikiLink = s.wiki
-        ? `<a href="${s.wiki}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="text-[11px] text-[#4b7a5c] hover:text-[#1b4332] hover:underline">维基百科 ›</a>`
+        ? `<a href="${s.wiki}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="text-[11px] text-[var(--tx-green-2)] hover:text-[var(--tx-head)] hover:underline">维基百科 ›</a>`
         : "";
       return `
       <article onclick="openDetail('${s.name}')"
-        class="fade-up cursor-pointer bg-white rounded-2xl p-3 shadow-sm border border-[#ece4d5] hover:shadow-md hover:border-[#c9dfc4] transition-all duration-200 flex gap-3">
+        class="fade-up cursor-pointer bg-[var(--bg-card)] rounded-2xl p-3 shadow-sm border border-[var(--br-2)] hover:shadow-md hover:border-[#c9dfc4] transition-all duration-200 flex gap-3">
         <div class="img-wrap w-20 h-20 shrink-0 rounded-xl overflow-hidden border border-[#e6ecdd]">
           ${s.image ? `<img src="${s.image}" alt="${displayName(s.name)}" loading="lazy" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-start justify-between gap-2">
-            <h3 class="font-bold text-[15px] text-[#1b4332] leading-snug">${displayName(s.name)}</h3>
+            <h3 class="font-bold text-[15px] text-[var(--tx-head)] leading-snug">${displayName(s.name)}</h3>
             ${levelBadge(s.level)}
           </div>
-          <div class="mt-1 flex items-center gap-1.5 text-[12px] text-[#8a8175]">
+          <div class="mt-1 flex items-center gap-1.5 text-[12px] text-[var(--tx-3)]">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#7a9b6d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 7h16"/><path d="M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>
             </svg>
             <span>${s.category}</span>
             ${s.iucn ? `<span class="text-[#b45309]">· IUCN ${s.iucn}</span>` : ""}
           </div>
-          <p class="mt-1.5 text-[12.5px] leading-relaxed text-[#5f584c] line-clamp-2">${s.desc || "暂无简介"}</p>
+          <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--tx-2)] line-clamp-2">${s.desc || "暂无简介"}</p>
           <div class="mt-1">${wikiLink}</div>
         </div>
       </article>`;
+    }
+
+    /* 省份保护级别构成环形图 */
+    function renderProvPie() {
+      const list = byProvince[currentProvince] || [];
+      const lv1 = list.filter(s => s.level === "一级").length;
+      const lv2 = list.filter(s => s.level === "二级").length;
+      const total = list.length;
+      document.getElementById("provPieTotal").textContent = total || "—";
+      document.getElementById("provPieLv1").textContent = lv1;
+      document.getElementById("provPieLv2").textContent = lv2;
+      if (provPieChart) provPieChart.destroy();
+      provPieChart = new Chart(document.getElementById("provPie"), {
+        type: "doughnut",
+        data: { labels: ["一级", "二级"], datasets: [{ data: [lv1, lv2],
+          backgroundColor: ["#1b4332", "#e3c9a2"], borderColor: cssVar("--bg-card"), borderWidth: 3 }] },
+        options: { responsive: true, maintainAspectRatio: true, cutout: "62%",
+          plugins: { legend: { display: false }, tooltip: { enabled: false } } }
+      });
     }
 
     function renderPanel() {
@@ -317,10 +457,11 @@
       const list = (byProvince[currentProvince] || []).filter(s => levelFilter === "全部" || s.level === levelFilter);
       document.getElementById("provinceName").textContent = currentProvince;
       document.getElementById("provinceCount").textContent = total + " 种保护动物";
+      renderProvPie();
       if (!total) {
-        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[#9a917f]">该省份暂未收录保护动物分布数据</div>`;
+        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[var(--tx-3)]">该省份暂未收录保护动物分布数据</div>`;
       } else if (!list.length) {
-        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[#9a917f]">该省份暂无「${levelFilter}」保护动物</div>`;
+        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[var(--tx-3)]">该省份暂无「${levelFilter}」保护动物</div>`;
       } else {
         cardsEl.innerHTML = list.map(cardHTML).join("");
       }
@@ -335,10 +476,24 @@
       document.querySelectorAll(".lv-chip").forEach(b => {
         const active = b.dataset.lv === levelFilter;
         b.className = "lv-chip px-3 py-1 text-xs rounded-full border transition " +
-          (active ? "bg-[#1b4332] text-white border-[#1b4332]" : "bg-white text-[#5f584c] border-[#d8cdb2] hover:border-[#a8b795]");
+          (active ? "bg-[#1b4332] text-white border-[#1b4332]" : "bg-[var(--bg-card)] text-[var(--tx-2)] border-[var(--br)] hover:border-[#a8b795]");
       });
       renderPanel();
     });
+
+    /* 地图模式切换：物种数量 / 濒危热力 */
+    function setMapMode(mode) {
+      mapMode = mode;
+      document.querySelectorAll(".map-mode-btn").forEach(b => {
+        const active = (b.id === "modeCountBtn") === (mode === "count");
+        b.className = "map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition " +
+          (active ? "bg-[#1b4332] text-white" : "text-[var(--tx-2)] hover:bg-[var(--bg-hover)]");
+      });
+      if (highlightSpecies) clearHighlight();
+      if (chart && geo) chart.setOption(buildMapOption(true), true);
+    }
+    document.getElementById("modeCountBtn").addEventListener("click", () => setMapMode("count"));
+    document.getElementById("modeRiskBtn").addEventListener("click", () => setMapMode("risk"));
 
     /* ==================== Tab 切换 + 统计图表 ==================== */
     let currentTab = "list";
@@ -347,7 +502,7 @@
       document.querySelectorAll(".tab-btn").forEach(b => {
         const active = b.dataset.tab === tab;
         b.className = "tab-btn text-xs font-medium px-4 py-1.5 rounded-full transition " +
-          (active ? "bg-[#1b4332] text-white shadow" : "text-[#5f584c] hover:bg-[#e5dcc9]");
+          (active ? "bg-[#1b4332] text-white shadow" : "text-[var(--tx-2)] hover:bg-[var(--bg-hover)]");
       });
       document.getElementById("tabList").classList.toggle("hidden", tab !== "list");
       document.getElementById("tabStats").classList.toggle("hidden", tab !== "stats");
@@ -369,8 +524,8 @@
           indexAxis: "y", responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false },
             tooltip: { callbacks: { label: c => c.parsed.x + " 种保护动物" } } },
-          scales: { x: { grid: { color: "#f0ead9" }, ticks: { font: { size: 10 }, color: "#8a8175" } },
-                    y: { grid: { display: false }, ticks: { font: { size: 9 }, color: "#5f584c" } } },
+          scales: { x: { grid: { color: cssVar("--chart-grid") }, ticks: { font: { size: 10 }, color: cssVar("--tx-3") } },
+                    y: { grid: { display: false }, ticks: { font: { size: 9 }, color: cssVar("--tx-2") } } },
           onClick: (e, els) => { if (els.length) selectProvince(entries[els[0].index][0]); }
         }
       });
@@ -379,11 +534,11 @@
       if (catChart) catChart.destroy();
       catChart = new Chart(document.getElementById("catChart"), {
         type: "doughnut",
-        data: { labels: CATEGORIES, datasets: [{ data: counts, backgroundColor: CAT_COLORS, borderColor: "#faf7ef", borderWidth: 2 }] },
+        data: { labels: CATEGORIES, datasets: [{ data: counts, backgroundColor: CAT_COLORS, borderColor: cssVar("--chart-border"), borderWidth: 2 }] },
         options: {
           responsive: true, maintainAspectRatio: false, cutout: "58%",
           plugins: {
-            legend: { position: "right", labels: { font: { size: 11 }, color: "#5f584c", boxWidth: 12, padding: 10 } },
+            legend: { position: "right", labels: { font: { size: 11 }, color: cssVar("--tx-2"), boxWidth: 12, padding: 10 } },
             tooltip: { callbacks: { label: c => ` ${c.label}：${c.parsed} 种` } }
           },
           onClick: (e, els) => { if (els.length) openCategory(CATEGORIES[els[0].index]); }
@@ -395,8 +550,8 @@
     function catCount(c) { return species.filter(s => s.category === c).length; }
     function renderCatDropdown() {
       document.getElementById("catDropdownList").innerHTML = CATEGORIES.map(c => `
-        <button onclick="openCategory('${c}')" class="w-full text-left px-4 py-2 text-[13px] text-[#4a443b] hover:bg-[#f0ead9] flex items-center justify-between">
-          <span>${c}</span><span class="text-[11px] text-[#9a917f]">${catCount(c)}</span>
+        <button onclick="openCategory('${c}')" class="w-full text-left px-4 py-2 text-[13px] text-[var(--tx-2)] hover:bg-[var(--bg-hover)] flex items-center justify-between">
+          <span>${c}</span><span class="text-[11px] text-[var(--tx-3)]">${catCount(c)}</span>
         </button>`).join("");
     }
     document.getElementById("catBtn").addEventListener("click", function () {
@@ -410,10 +565,10 @@
       document.getElementById("modalTitle").textContent = cat;
       document.getElementById("modalCount").textContent = list.length + " 种";
       document.getElementById("modalGrid").innerHTML = list.map(s => `
-        <button onclick="openDetail('${s.name}')" class="fade-up text-left bg-white rounded-2xl overflow-hidden border border-[#ece4d5] hover:border-[#c9dfc4] hover:shadow-md transition">
+        <button onclick="openDetail('${s.name}')" class="fade-up text-left bg-[var(--bg-card)] rounded-2xl overflow-hidden border border-[var(--br-2)] hover:border-[#c9dfc4] hover:shadow-md transition">
           <div class="img-wrap h-28 overflow-hidden">${s.image ? `<img src="${s.image}" alt="${displayName(s.name)}" loading="lazy" class="w-full h-full object-cover" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}</div>
           <div class="p-2.5">
-            <div class="text-[13px] font-bold text-[#1b4332] truncate">${displayName(s.name)}</div>
+            <div class="text-[13px] font-bold text-[var(--tx-head)] truncate">${displayName(s.name)}</div>
             <div class="mt-1">${levelBadge(s.level)}</div>
           </div>
         </button>`).join("");
@@ -421,6 +576,58 @@
     }
     document.getElementById("categoryModal").addEventListener("click", function (e) {
       if (e.target.closest("[data-close-modal]")) this.classList.add("hidden");
+    });
+
+    /* ==================== 物种对比 ==================== */
+    function toggleCompare(s) {
+      const i = compareList.findIndex(x => x.name === s.name);
+      if (i >= 0) {
+        compareList.splice(i, 1);
+      } else {
+        if (compareList.length >= 2) { openCompare(); return; }  // 已满 2 个 → 直接打开对比
+        compareList.push(s);
+      }
+      const btn = document.getElementById("drawerCompare");
+      const names = compareList.map(x => displayName(x.name)).join(" vs ");
+      btn.textContent = compareList.length
+        ? `已选 ${compareList.length}/2：${names}${compareList.length === 2 ? "（再点击查看对比）" : ""}`
+        : "＋ 加入对比（最多 2 个物种）";
+      if (compareList.length === 2) openCompare();
+    }
+    function openCompare() {
+      document.getElementById("compareGrid").innerHTML = compareList.map(s => {
+        const latin = [s.scientific || "", s.en_name ? "· " + s.en_name : ""].filter(Boolean).join(" ");
+        const provTxt = s.provinces.length ? s.provinces.join("、") : "暂无分布数据";
+        return `
+        <div class="bg-[var(--bg-card)] rounded-2xl overflow-hidden border border-[var(--br-2)] shadow-sm fade-up">
+          <div class="img-wrap h-36 overflow-hidden">${s.image ? `<img src="${s.image}" alt="${displayName(s.name)}" loading="lazy" class="w-full h-full object-cover" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}</div>
+          <div class="p-3.5">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="font-bold text-[15px] text-[var(--tx-head)]">${displayName(s.name)}</h4>
+              ${levelBadge(s.level)}
+            </div>
+            <div class="mt-0.5 text-[12px] text-[var(--tx-3)] italic truncate">${latin || "—"}</div>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green-2)]">${s.category}</span>
+              <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]">${s.iucn ? "IUCN " + s.iucn : "IUCN 未收录"}</span>
+            </div>
+            <p class="mt-2.5 text-[12px] leading-relaxed text-[var(--tx-2)] line-clamp-3">${s.desc || "暂无简介"}</p>
+            <div class="mt-3 pt-3 border-t border-[var(--br-2)]">
+              <div class="text-[10.5px] font-bold text-[var(--tx-head)] mb-1.5">分布（${s.provinces.length} 省）</div>
+              <p class="text-[11px] leading-relaxed text-[var(--tx-3)]">${provTxt}</p>
+            </div>
+            <div class="mt-3 flex items-center gap-2">
+              <button onclick="setHighlight(findSpecies('${s.name}')); document.getElementById('compareModal').classList.add('hidden')"
+                class="flex-1 text-[12px] font-medium px-3 py-1.5 rounded-full bg-[#1b4332] text-white hover:bg-[#2d6a4f] transition">地图查看</button>
+              <button onclick="openDetail('${s.name}')" class="flex-1 text-[12px] font-medium px-3 py-1.5 rounded-full bg-[var(--bg-soft)] text-[var(--tx-2)] hover:bg-[var(--bg-hover)] transition">详情</button>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+      document.getElementById("compareModal").classList.remove("hidden");
+    }
+    document.getElementById("compareModal").addEventListener("click", function (e) {
+      if (e.target.closest("[data-close-compare]")) this.classList.add("hidden");
     });
 
     /* ==================== 物种详情抽屉 ==================== */
@@ -441,19 +648,23 @@
       const iucnEl = document.getElementById("drawerIucn");
       if (s.iucn) {
         iucnEl.textContent = "IUCN " + s.iucn + " · " + (s.iucn_cn || "");
-        iucnEl.className = "text-[11px] px-2.5 py-1 rounded-full " + (IUCN_CLS[s.iucn] || "bg-[#f5efe3] text-[#8a5a3a]");
+        iucnEl.className = "text-[11px] px-2.5 py-1 rounded-full " + (IUCN_CLS[s.iucn] || "bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]");
       } else {
         iucnEl.textContent = "IUCN 未收录";
-        iucnEl.className = "text-[11px] px-2.5 py-1 rounded-full bg-[#f5efe3] text-[#8a5a3a]";
+        iucnEl.className = "text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]";
       }
       document.getElementById("drawerDesc").textContent = s.desc || "暂无简介";
       document.getElementById("drawerProvCount").textContent = s.provinces.length;
       document.getElementById("drawerProvs").innerHTML = s.provinces.map(p =>
-        `<button onclick="selectProvince('${p}')" class="text-[11px] px-2.5 py-1 rounded-full bg-[#eef4e6] text-[#2d6a4f] hover:bg-[#dcecd8] transition">${p}</button>`).join("");
+        `<button onclick="selectProvince('${p}')" class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green)] hover:bg-[var(--bg-green-soft2)] transition">${p}</button>`).join("");
       const wiki = document.getElementById("drawerWiki");
       if (s.wiki) { wiki.href = s.wiki; wiki.classList.remove("pointer-events-none", "opacity-40"); }
       else { wiki.href = "#"; wiki.classList.add("pointer-events-none", "opacity-40"); }
       document.getElementById("drawerViewDist").onclick = () => { setHighlight(s); closeDrawer(); };
+      const cmpBtn = document.getElementById("drawerCompare");
+      cmpBtn.onclick = () => { toggleCompare(s); };
+      const inCmp = compareList.some(x => x.name === s.name);
+      cmpBtn.textContent = inCmp ? "已加入对比 ✓（再点移除）" : "＋ 加入对比（最多 2 个物种）";
       document.getElementById("drawer").classList.remove("hidden");
     }
     function closeDrawer() { document.getElementById("drawer").classList.add("hidden"); }
@@ -472,19 +683,19 @@
         (s.scientific || "").toLowerCase().includes(kw.toLowerCase()) ||
         (s.en_name || "").toLowerCase().includes(kw.toLowerCase())).slice(0, 12);
       if (!results.length) {
-        searchDropdown.innerHTML = `<div class="px-4 py-6 text-center text-sm text-[#9a917f]">未找到与「${kw}」相关的保护动物</div>`;
+        searchDropdown.innerHTML = `<div class="px-4 py-6 text-center text-sm text-[var(--tx-3)]">未找到与「${kw}」相关的保护动物</div>`;
       } else {
         searchDropdown.innerHTML = results.map(s => `
           <button onclick="openDetail('${s.name}'); this.closest('#searchDropdown').classList.add('hidden')"
-            class="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-[#f0ead9] transition">
+            class="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-[var(--bg-hover)] transition">
             <div class="img-wrap w-10 h-10 shrink-0 rounded-lg overflow-hidden">
               ${s.image ? `<img src="${s.image}" loading="lazy" class="w-full h-full object-cover" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}
             </div>
             <div class="min-w-0 flex-1">
-              <div class="text-[13px] font-medium text-[#2f2a25] truncate">${displayName(s.name)}</div>
-              <div class="text-[11px] text-[#9a917f]">${s.category} · ${s.level}</div>
+              <div class="text-[13px] font-medium text-[var(--tx)] truncate">${displayName(s.name)}</div>
+              <div class="text-[11px] text-[var(--tx-3)]">${s.category} · ${s.level}</div>
             </div>
-            <span class="text-[10px] text-[#4b7a5c] whitespace-nowrap">${s.provinces.length}省</span>
+            <span class="text-[10px] text-[var(--tx-green-2)] whitespace-nowrap">${s.provinces.length}省</span>
           </button>`).join("");
       }
       searchDropdown.classList.remove("hidden");
@@ -500,14 +711,7 @@
     /* ==================== ECharts 地图 ==================== */
     function renderChart() {
       chart = echarts.init(document.getElementById("mapChart"));
-      chart.setOption({
-        tooltip: {
-          trigger: "item", backgroundColor: "rgba(27,67,50,0.95)", borderColor: "#1b4332",
-          padding: [8, 12], textStyle: { color: "#f6f3ec", fontSize: 12 },
-          formatter: p => "<strong>" + p.name + "</strong><br/>保护动物：" + (countByProvince[p.name] || 0) + " 种"
-        },
-        ...buildMapOption(true)
-      });
+      chart.setOption(buildMapOption(true));
       chart.on("click", function (params) {
         if (params && params.name) { clearHighlight(); selectProvince(params.name); }
       });
@@ -540,6 +744,7 @@
         echarts.registerMap("china", geo);
         renderChart();
         applyHighlight();
+        setMapMode("count");
 
         if (species.length) {
           selectProvince(DEFAULT_PROVINCE);
