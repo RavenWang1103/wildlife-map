@@ -419,6 +419,7 @@
       if (!chart || !geo) return;
       // notMerge 重建，高亮时移除 visualMap 使双色 itemStyle 生效
       chart.setOption(buildMapOption(!highlightSpecies), true);
+      labelShow = true; // 视图回到默认缩放，标签恢复显示
       const banner = document.getElementById("highlightBanner");
       if (highlightSpecies) {
         document.getElementById("highlightText").textContent =
@@ -572,6 +573,7 @@
       });
       if (highlightSpecies) clearHighlight();
       if (chart && geo) chart.setOption(buildMapOption(true), true);
+      labelShow = true; // 视图回到默认缩放，标签恢复显示
     }
     document.getElementById("modeCountBtn").addEventListener("click", () => setMapMode("count"));
     document.getElementById("modeRiskBtn").addEventListener("click", () => setMapMode("risk"));
@@ -808,11 +810,27 @@
     });
 
     /* ==================== ECharts 地图 ==================== */
+    // 缩放阈值：缩小到一定程度后隐藏省份名（文字过小/重叠时更美观，带迟滞防抖）
+    const ZOOM_HIDE = 0.85, ZOOM_SHOW = 1.0;
+    let labelShow = true;
+    function syncLabelByZoom(zoom) {
+      const target = zoom <= ZOOM_HIDE ? false : (zoom >= ZOOM_SHOW ? true : labelShow);
+      if (target !== labelShow) {
+        labelShow = target;
+        chart.setOption({ series: [{ label: { show: labelShow } }] });
+      }
+    }
+
     function renderChart() {
       chart = echarts.init(document.getElementById("mapChart"));
       chart.setOption(buildMapOption(true));
       chart.on("click", function (params) {
         if (params && params.name) { clearHighlight(); selectProvince(params.name); }
+      });
+      chart.on("georoam", function () {
+        // params.zoom 是单次缩放系数，需读取绝对缩放级别（默认 1，缩小后持续减小）
+        const zoom = chart.getOption().series[0].zoom;
+        if (typeof zoom === "number") syncLabelByZoom(zoom);
       });
     }
 
