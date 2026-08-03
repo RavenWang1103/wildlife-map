@@ -67,7 +67,7 @@ for f in "${FILES[@]}"; do
     die "$code  $url 资源访问失败"
   fi
   if [ "$(sha_url "$url")" = "$(sha "$f")" ]; then
-    say "  OK  $code  $url（与本地一致）"
+    say "  OK  $code  ${url}（与本地一致）"
   else
     die "$url 内容与本地不一致，请检查提交是否完整"
   fi
