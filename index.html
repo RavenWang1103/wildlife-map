@@ -43,12 +43,7 @@
     #mapChart { width: 100%; height: 100%; }
     .img-wrap { background: radial-gradient(circle at 30% 30%, #dce8d2 0%, #eef4e6 45%, #e2e9d9 100%); }
     html.dark .img-wrap { background: radial-gradient(circle at 30% 30%, #22332a 0%, #2b3d30 45%, #223028 100%); }
-    .img-wrap::after {
-      content: "🌿"; display: flex; align-items: center; justify-content: center;
-      width: 100%; height: 100%; font-size: 26px; color: #8aa97e; opacity: 0.55;
-    }
     .img-wrap img { position: relative; z-index: 1; }
-    .img-wrap.no-img img { display: none; }
   </style>
 </head>
 <body class="bg-[var(--bg)] text-[var(--tx)] lg:overflow-hidden">
@@ -80,6 +75,12 @@
             <div id="catDropdown" class="hidden absolute right-0 top-full mt-2 w-44 bg-[var(--bg-card)] rounded-xl shadow-xl border border-[var(--br)] overflow-hidden z-50">
               <div id="catDropdownList" class="py-1 max-h-[60vh] overflow-y-auto"></div>
             </div>
+          </div>
+          <!-- 语言切换：简 / 繁 / EN -->
+          <div id="langSwitch" class="flex items-center bg-[#2d6a4f]/80 rounded-full p-0.5 text-[10.5px] font-medium" title="简介语言">
+            <button data-lang="zhs" class="lang-btn px-2 py-1 rounded-full transition">简</button>
+            <button data-lang="zht" class="lang-btn px-2 py-1 rounded-full transition">繁</button>
+            <button data-lang="en" class="lang-btn px-2 py-1 rounded-full transition">EN</button>
           </div>
           <!-- 深色模式切换 -->
           <button id="themeBtn" title="切换深色模式"
@@ -201,7 +202,7 @@
         </div>
 
         <p class="mt-6 text-[10.5px] leading-relaxed text-[var(--tx-3)]">
-          物种图片与简介来源于维基百科（遵循 CC BY-SA 4.0 及其各自授权）；物种名录依据 2021 版《国家重点保护野生动物名录》；IUCN 等级与学名来源于维基数据；省级分布为公开资料整理，仅供科普展示。
+          物种图片与简介来源于维基百科（遵循 CC BY-SA 4.0 及其各自授权）；部分图片来源于 iNaturalist 观察（遵循 CC BY-NC / CC BY 等授权）；动物志描述来源于中国科学院《中国动物主题数据库》；物种名录依据 2021 版《国家重点保护野生动物名录》；IUCN 等级与学名来源于维基数据；省级分布为公开资料整理，仅供科普展示。
         </p>
       </div>
     </aside>
@@ -242,6 +243,7 @@
           <span id="drawerIucn" class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]">IUCN 易危</span>
         </div>
         <p id="drawerDesc" class="mt-4 text-[13.5px] leading-relaxed text-[var(--tx-2)] whitespace-pre-line"></p>
+        <div id="drawerFauna" class="hidden mt-4"></div>
         <div class="mt-5">
           <div class="text-xs font-bold text-[var(--tx-head)] mb-2">分布省份（<span id="drawerProvCount">0</span>）</div>
           <div id="drawerProvs" class="flex flex-wrap gap-1.5"></div>
@@ -275,7 +277,7 @@
 
   <script>
     /* ==================== 全局状态 ==================== */
-    const GEO_URL = "https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json";
+    const GEO_URL = "data/100000_full.json";
     const DATA_URL = "data/animals.json";
     const DEFAULT_PROVINCE = "四川省";
     const DISPLAY = { "虎": "东北虎", "藏羚": "藏羚羊" };
@@ -316,6 +318,42 @@
         document.getElementById("themeMoon").classList.add("hidden"); }
     })();
 
+    /* ==================== 简介语言（简/繁/EN） ==================== */
+    let LANG = localStorage.getItem("wm-lang") || "zhs";
+    let openDetailName = null;
+
+    function remapDesc(lang) {
+      // 把选中的语言版本映射到 s.desc，所有渲染处无需改动
+      species.forEach(s => {
+        const t = s["desc_" + lang];
+        s.desc = t || s.desc_zhs || s.desc || "";
+      });
+    }
+    function paintLangBtns() {
+      document.querySelectorAll(".lang-btn").forEach(b => {
+        const active = b.dataset.lang === LANG;
+        b.className = "lang-btn px-2 py-1 rounded-full transition " +
+          (active ? "bg-white text-[#1b4332] shadow" : "text-[#dbe7dd] hover:bg-white/10");
+      });
+    }
+    function applyLang(lang) {
+      LANG = lang;
+      localStorage.setItem("wm-lang", lang);
+      if (!species.length) { paintLangBtns(); return; }
+      remapDesc(lang);
+      paintLangBtns();
+      // 重渲染当前可见内容（省份卡片 / 搜索下拉 / 详情抽屉 / 对比面板）
+      renderPanel();
+      if (!searchDropdown.classList.contains("hidden")) doSearch();
+      if (openDetailName && !document.getElementById("drawer").classList.contains("hidden")) openDetail(openDetailName);
+      if (!document.getElementById("compareModal").classList.contains("hidden")) openCompare();
+    }
+    document.getElementById("langSwitch").addEventListener("click", function (e) {
+      const btn = e.target.closest(".lang-btn"); if (!btn) return;
+      applyLang(btn.dataset.lang);
+    });
+    paintLangBtns();
+
     /* ==================== 数据索引 ==================== */
     function buildIndex(list) {
       byProvince = {}; countByProvince = {}; riskCount = {};
@@ -328,6 +366,7 @@
     const displayName = n => DISPLAY[n] || n;
     const byName = {};
     const findSpecies = n => byName[n] || null;
+    const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     /* ==================== 单物种地图高亮 ==================== */
     // 构建完整地图 option；withVmap=false 时不带 visualMap，
@@ -401,6 +440,48 @@
       return `<span class="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full ${cls}">${lv}</span>`;
     }
 
+    /* ==================== 图片区块（有图 / 无图精美占位） ==================== */
+    const PAW_SVG = (cls) => `<svg class="${cls}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <circle cx="6.2" cy="8.2" r="1.7"/><circle cx="10" cy="5.9" r="1.7"/><circle cx="14" cy="5.9" r="1.7"/><circle cx="17.8" cy="8.2" r="1.7"/>
+      <path d="M12 11.2c-2.2 0-3.8 1.6-3.8 3.6 0 2.6 1.6 4.2 3.8 4.2s3.8-1.6 3.8-4.2c0-2-1.6-3.6-3.8-3.6z"/>
+    </svg>`;
+
+    // 无图占位：剪影 + 学名 + 级别徽章（size: tiny / list / banner）
+    function noImgHtml(s, size) {
+      const latin = s.scientific || "";
+      if (size === "tiny") {
+        return `<div class="flex items-center justify-center w-full h-full text-[var(--tx-3)]">${PAW_SVG("w-5 h-5 opacity-80")}</div>`;
+      }
+      if (size === "list") {
+        return `<div class="flex flex-col items-center justify-center w-full h-full gap-0.5 text-[var(--tx-3)] px-1">
+          ${PAW_SVG("w-7 h-7 opacity-80")}
+          <span class="w-full text-center text-[9px] leading-tight truncate text-[var(--tx-3)]">${latin || displayName(s.name)}</span>
+        </div>`;
+      }
+      return `<div class="flex flex-col items-center justify-center w-full h-full gap-1.5 text-[var(--tx-3)]">
+        ${PAW_SVG("w-10 h-10 md:w-12 md:h-12 opacity-75")}
+        <span class="text-[12px] font-semibold text-[var(--tx-2)]">${displayName(s.name)}</span>
+        ${latin ? `<span class="text-[11px] italic truncate max-w-[88%]">${latin}</span>` : ""}
+        <span class="inline-flex items-center">${levelBadge(s.level)}</span>
+      </div>`;
+    }
+
+    // 有图渲染 <img>，无图渲染占位
+    function imgBlock(s, size, imgCls) {
+      if (!s) return "";
+      if (s.image) {
+        return `<img src="${s.image}" alt="${displayName(s.name)}" loading="lazy" class="${imgCls || ""}" onerror="imgFail(this, '${s.name}')">`;
+      }
+      return noImgHtml(s, size);
+    }
+
+    // 图片加载失败 → 切换为占位
+    function imgFail(img, name) {
+      const s = findSpecies(name); if (!s) return;
+      const wrap = img.closest(".img-wrap");
+      wrap.innerHTML = noImgHtml(s, wrap.dataset.size || "banner");
+    }
+
     /* ==================== 右侧面板（Tab1 物种分布） ==================== */
     const cardsEl = document.getElementById("animalCards");
     const panel = document.getElementById("panel");
@@ -412,8 +493,8 @@
       return `
       <article onclick="openDetail('${s.name}')"
         class="fade-up cursor-pointer bg-[var(--bg-card)] rounded-2xl p-3 shadow-sm border border-[var(--br-2)] hover:shadow-md hover:border-[#c9dfc4] transition-all duration-200 flex gap-3">
-        <div class="img-wrap w-20 h-20 shrink-0 rounded-xl overflow-hidden border border-[#e6ecdd]">
-          ${s.image ? `<img src="${s.image}" alt="${displayName(s.name)}" loading="lazy" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}
+        <div class="img-wrap w-20 h-20 shrink-0 rounded-xl overflow-hidden border border-[#e6ecdd]" data-size="list">
+          ${imgBlock(s, "list")}
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-start justify-between gap-2">
@@ -566,7 +647,7 @@
       document.getElementById("modalCount").textContent = list.length + " 种";
       document.getElementById("modalGrid").innerHTML = list.map(s => `
         <button onclick="openDetail('${s.name}')" class="fade-up text-left bg-[var(--bg-card)] rounded-2xl overflow-hidden border border-[var(--br-2)] hover:border-[#c9dfc4] hover:shadow-md transition">
-          <div class="img-wrap h-28 overflow-hidden">${s.image ? `<img src="${s.image}" alt="${displayName(s.name)}" loading="lazy" class="w-full h-full object-cover" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}</div>
+          <div class="img-wrap h-28 overflow-hidden" data-size="banner">${imgBlock(s, "banner", "w-full h-full object-cover")}</div>
           <div class="p-2.5">
             <div class="text-[13px] font-bold text-[var(--tx-head)] truncate">${displayName(s.name)}</div>
             <div class="mt-1">${levelBadge(s.level)}</div>
@@ -600,7 +681,7 @@
         const provTxt = s.provinces.length ? s.provinces.join("、") : "暂无分布数据";
         return `
         <div class="bg-[var(--bg-card)] rounded-2xl overflow-hidden border border-[var(--br-2)] shadow-sm fade-up">
-          <div class="img-wrap h-36 overflow-hidden">${s.image ? `<img src="${s.image}" alt="${displayName(s.name)}" loading="lazy" class="w-full h-full object-cover" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}</div>
+          <div class="img-wrap h-36 overflow-hidden" data-size="banner">${imgBlock(s, "banner", "w-full h-full object-cover")}</div>
           <div class="p-3.5">
             <div class="flex items-center justify-between gap-2">
               <h4 class="font-bold text-[15px] text-[var(--tx-head)]">${displayName(s.name)}</h4>
@@ -633,11 +714,10 @@
     /* ==================== 物种详情抽屉 ==================== */
     function openDetail(name) {
       const s = findSpecies(name); if (!s) return;
+      openDetailName = s.name;
       document.getElementById("categoryModal").classList.add("hidden");
       document.getElementById("searchDropdown").classList.add("hidden");
-      document.getElementById("drawerImg").innerHTML = s.image
-        ? `<img src="${s.image}" alt="${displayName(s.name)}" class="w-full h-full object-cover" onerror="this.closest('.img-wrap').classList.add('no-img')">`
-        : "";
+      document.getElementById("drawerImg").innerHTML = imgBlock(s, "banner", "w-full h-full object-cover");
       document.getElementById("drawerName").textContent = displayName(s.name);
       document.getElementById("drawerLevel").textContent = "国家" + s.level;
       document.getElementById("drawerLevel").className = "shrink-0 text-xs font-medium px-3 py-1 rounded-full " +
@@ -654,6 +734,25 @@
         iucnEl.className = "text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]";
       }
       document.getElementById("drawerDesc").textContent = s.desc || "暂无简介";
+      const faunaEl = document.getElementById("drawerFauna");
+      const fauna = s.fauna && s.fauna.items && Object.keys(s.fauna.items).length ? s.fauna : null;
+      if (fauna) {
+        faunaEl.classList.remove("hidden");
+        faunaEl.innerHTML = `
+          <div class="flex items-center gap-1.5 mb-2">
+            <span class="text-xs font-bold text-[var(--tx-head)]">动物志描述</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-green-soft2)] text-[var(--tx-green)]">${esc(fauna.dbase)}</span>
+          </div>
+          ${Object.entries(fauna.items).map(([t, v]) => `
+            <div class="mb-3 rounded-xl bg-[var(--bg-soft)]/60 border border-[var(--br-2)] p-3">
+              <div class="text-[11px] font-bold text-[var(--tx-green)] mb-1">▍${esc(t)}</div>
+              <p class="text-[12.5px] leading-relaxed text-[var(--tx-2)] whitespace-pre-line">${esc(v.content)}</p>
+              ${v.refs && v.refs.length ? `<p class="mt-1.5 text-[10.5px] text-[var(--tx-3)]">参考：${esc(v.refs.join("；"))}</p>` : ""}
+            </div>`).join("")}`;
+      } else {
+        faunaEl.classList.add("hidden");
+        faunaEl.innerHTML = "";
+      }
       document.getElementById("drawerProvCount").textContent = s.provinces.length;
       document.getElementById("drawerProvs").innerHTML = s.provinces.map(p =>
         `<button onclick="selectProvince('${p}')" class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green)] hover:bg-[var(--bg-green-soft2)] transition">${p}</button>`).join("");
@@ -688,8 +787,8 @@
         searchDropdown.innerHTML = results.map(s => `
           <button onclick="openDetail('${s.name}'); this.closest('#searchDropdown').classList.add('hidden')"
             class="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-[var(--bg-hover)] transition">
-            <div class="img-wrap w-10 h-10 shrink-0 rounded-lg overflow-hidden">
-              ${s.image ? `<img src="${s.image}" loading="lazy" class="w-full h-full object-cover" onerror="this.closest('.img-wrap').classList.add('no-img')">` : ""}
+            <div class="img-wrap w-10 h-10 shrink-0 rounded-lg overflow-hidden" data-size="tiny">
+              ${imgBlock(s, "tiny", "w-full h-full object-cover")}
             </div>
             <div class="min-w-0 flex-1">
               <div class="text-[13px] font-medium text-[var(--tx)] truncate">${displayName(s.name)}</div>
@@ -735,6 +834,8 @@
 
         species = data.species || [];
         species.forEach(s => { byName[s.name] = s; });
+        remapDesc(LANG);
+        paintLangBtns();
         buildIndex(species);
 
         const provCount = Object.keys(countByProvince).length;
