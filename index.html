@@ -59,7 +59,7 @@
             <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
           </svg>
           <div class="min-w-0">
-            <h1 class="text-base md:text-lg font-bold tracking-wide leading-tight truncate">中国野生动物分布地图</h1>
+            <h1 class="text-base md:text-lg font-bold tracking-wide leading-tight truncate" data-i18n="title">中国野生动物分布地图</h1>
             <p class="text-[11px] text-[#a7c4bc] hidden sm:block" id="navSub">国家保护野生动物 · 省级分布概况</p>
           </div>
         </div>
@@ -70,7 +70,7 @@
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/>
               </svg>
-              按种类
+              <span data-i18n="catBtn">按种类</span>
             </button>
             <div id="catDropdown" class="hidden absolute right-0 top-full mt-2 w-44 bg-[var(--bg-card)] rounded-xl shadow-xl border border-[var(--br)] overflow-hidden z-50">
               <div id="catDropdownList" class="py-1 max-h-[60vh] overflow-y-auto"></div>
@@ -119,8 +119,8 @@
 
       <!-- 地图模式切换（物种数量 / 濒危物种） -->
       <div class="absolute top-3 left-3 z-20 flex items-center gap-1 bg-[var(--bg-card)]/90 backdrop-blur rounded-full p-1 shadow border border-[var(--br)]">
-        <button id="modeCountBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition">物种数量</button>
-        <button id="modeRiskBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition">濒危热力</button>
+        <button id="modeCountBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeCount">物种数量</button>
+        <button id="modeRiskBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeRisk">濒危热力</button>
       </div>
 
       <!-- 单物种高亮提示条 -->
@@ -151,8 +151,8 @@
       <div class="p-4 md:p-6 pb-8">
         <!-- Tab 切换 -->
         <div class="flex items-center gap-1 bg-[var(--bg-soft)] rounded-full p-1 w-fit">
-          <button data-tab="list" class="tab-btn text-xs font-medium px-4 py-1.5 rounded-full transition">物种分布</button>
-          <button data-tab="stats" class="tab-btn text-xs font-medium px-4 py-1.5 rounded-full transition">统计分析</button>
+          <button data-tab="list" class="tab-btn text-xs font-medium px-4 py-1.5 rounded-full transition" data-i18n="tabList">物种分布</button>
+          <button data-tab="stats" class="tab-btn text-xs font-medium px-4 py-1.5 rounded-full transition" data-i18n="tabStats">统计分析</button>
         </div>
 
         <!-- Tab1：物种分布 -->
@@ -161,7 +161,7 @@
             <h2 id="provinceName" class="text-lg md:text-xl font-bold text-[var(--tx-head)]">四川省</h2>
             <span id="provinceCount" class="shrink-0 text-xs font-medium text-[var(--tx-head)] bg-[var(--bg-green-soft2)] px-3 py-1 rounded-full whitespace-nowrap">-- 种保护动物</span>
           </div>
-          <p class="mt-2 text-xs text-[var(--tx-3)]">点击左侧地图省份，查看该省保护动物分布</p>
+          <p class="mt-2 text-xs text-[var(--tx-3)]" data-i18n="panelHint">点击左侧地图省份，查看该省保护动物分布</p>
           <!-- 省份物种构成（一级 / 二级） -->
           <div class="mt-3 flex items-center gap-4 bg-[var(--bg-card)] rounded-2xl border border-[var(--br-2)] p-3">
             <div class="relative w-16 h-16 shrink-0">
@@ -169,17 +169,17 @@
               <span id="provPieTotal" class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--tx-2)]">--</span>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="text-xs font-bold text-[var(--tx-head)]">本省保护级别构成</div>
+              <div class="text-xs font-bold text-[var(--tx-head)]" data-i18n="provPieTitle">本省保护级别构成</div>
               <div class="mt-1.5 flex items-center gap-1.5 text-[11px]">
                 <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#1b4332]"></span>
-                <span class="text-[var(--tx-2)]">一级</span>
+                <span class="text-[var(--tx-2)]" data-i18n="lv1">一级</span>
                 <span id="provPieLv1" class="font-bold text-[var(--tx)]">--</span>
                 <span class="mx-1 text-[var(--tx-3)]">·</span>
                 <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#e3c9a2]"></span>
-                <span class="text-[var(--tx-2)]">二级</span>
+                <span class="text-[var(--tx-2)]" data-i18n="lv2">二级</span>
                 <span id="provPieLv2" class="font-bold text-[var(--tx)]">--</span>
               </div>
-              <p class="mt-1 text-[10.5px] text-[var(--tx-3)]">一级多为珍稀濒危，保护优先级更高</p>
+              <p class="mt-1 text-[10.5px] text-[var(--tx-3)]" data-i18n="provPieHint">一级多为珍稀濒危，保护优先级更高</p>
             </div>
           </div>
           <div id="filterBar" class="mt-4 flex items-center gap-2">
@@ -193,11 +193,11 @@
 
         <!-- Tab2：统计分析 -->
         <div id="tabStats" class="hidden mt-4">
-          <h3 class="text-sm font-bold text-[var(--tx-head)]">各省保护动物数量排名</h3>
-          <p class="text-[11px] text-[var(--tx-3)] mt-0.5">点击柱子可切换到该省份</p>
+          <h3 class="text-sm font-bold text-[var(--tx-head)]" data-i18n="statsTitle">各省保护动物数量排名</h3>
+          <p class="text-[11px] text-[var(--tx-3)] mt-0.5" data-i18n="statsHint">点击柱子可切换到该省份</p>
           <div class="mt-2 bg-[var(--bg-card)] rounded-2xl border border-[var(--br-2)] p-3 h-[380px]"><canvas id="rankChart"></canvas></div>
-          <h3 class="mt-5 text-sm font-bold text-[var(--tx-head)]">物种类别构成</h3>
-          <p class="text-[11px] text-[var(--tx-3)] mt-0.5">点击扇区可查看该类别物种</p>
+          <h3 class="mt-5 text-sm font-bold text-[var(--tx-head)]" data-i18n="catTitle">物种类别构成</h3>
+          <p class="text-[11px] text-[var(--tx-3)] mt-0.5" data-i18n="catHint">点击扇区可查看该类别物种</p>
           <div class="mt-2 bg-[var(--bg-card)] rounded-2xl border border-[var(--br-2)] p-3 h-[320px]"><canvas id="catChart"></canvas></div>
         </div>
 
@@ -245,15 +245,15 @@
         <p id="drawerDesc" class="mt-4 text-[13.5px] leading-relaxed text-[var(--tx-2)] whitespace-pre-line"></p>
         <div id="drawerFauna" class="hidden mt-4"></div>
         <div class="mt-5">
-          <div class="text-xs font-bold text-[var(--tx-head)] mb-2">分布省份（<span id="drawerProvCount">0</span>）</div>
+          <div class="text-xs font-bold text-[var(--tx-head)] mb-2"><span data-i18n="distProv">分布省份</span>（<span id="drawerProvCount">0</span>）</div>
           <div id="drawerProvs" class="flex flex-wrap gap-1.5"></div>
         </div>
         <div class="mt-6 flex items-center gap-3">
           <a id="drawerWiki" href="#" target="_blank" rel="noopener"
-             class="flex-1 text-center text-sm font-medium px-4 py-2.5 rounded-full bg-[#1b4332] text-white hover:bg-[#2d6a4f] transition">维基百科详情 ↗</a>
-          <button id="drawerViewDist" class="flex-1 text-sm font-medium px-4 py-2.5 rounded-full bg-[#e3c9a2] text-[#5a432a] hover:bg-[#d9ba8a] transition">在地图上查看</button>
+             class="flex-1 text-center text-sm font-medium px-4 py-2.5 rounded-full bg-[#1b4332] text-white hover:bg-[#2d6a4f] transition" data-i18n="wiki">维基百科详情 ↗</a>
+          <button id="drawerViewDist" class="flex-1 text-sm font-medium px-4 py-2.5 rounded-full bg-[#e3c9a2] text-[#5a432a] hover:bg-[#d9ba8a] transition" data-i18n="viewMap">在地图上查看</button>
         </div>
-        <button id="drawerCompare" class="mt-3 w-full text-sm font-medium px-4 py-2.5 rounded-full border border-[var(--br)] text-[var(--tx-2)] hover:bg-[var(--bg-soft)] transition">＋ 加入对比（最多 2 个物种）</button>
+        <button id="drawerCompare" class="mt-3 w-full text-sm font-medium px-4 py-2.5 rounded-full border border-[var(--br)] text-[var(--tx-2)] hover:bg-[var(--bg-soft)] transition" data-i18n="addCompare">＋ 加入对比（最多 2 个物种）</button>
       </div>
     </div>
   </div>
@@ -264,8 +264,8 @@
     <div class="absolute inset-x-0 bottom-0 md:inset-x-auto md:right-0 md:top-0 md:bottom-0 md:w-[720px] bg-[var(--bg-panel)] md:rounded-l-3xl shadow-2xl flex flex-col md:max-h-full max-h-[90vh] rounded-t-3xl">
       <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--br)] shrink-0">
         <div>
-          <h3 class="font-bold text-[var(--tx-head)] text-lg">物种对比</h3>
-          <p class="text-[11px] text-[var(--tx-3)]">并排对比两种保护动物的特征与分布</p>
+          <h3 class="font-bold text-[var(--tx-head)] text-lg" data-i18n="compareTitle">物种对比</h3>
+          <p class="text-[11px] text-[var(--tx-3)]" data-i18n="compareDesc">并排对比两种保护动物的特征与分布</p>
         </div>
         <button data-close-compare class="w-8 h-8 rounded-full bg-[var(--bg-soft)] hover:bg-[var(--bg-hover)] flex items-center justify-center text-[var(--tx-2)] transition">✕</button>
       </div>
@@ -289,6 +289,116 @@
       "LC": "bg-[#4b7a5c] text-white", "DD": "bg-[#a3a396] text-white", "NE": "bg-[#a3a396] text-white"
     };
     const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+    /* ==================== 国际化字符串 ==================== */
+    const I18N = {
+      zhs: {
+        title: "中国野生动物分布地图", navSub: "国家保护野生动物 · 省级分布概况",
+        catBtn: "按种类", modeCount: "物种数量", modeRisk: "濒危热力",
+        tabList: "物种分布", tabStats: "统计分析",
+        panelHint: "点击左侧地图省份，查看该省保护动物分布",
+        panelHintRisk: "濒危热力模式下仅显示极危（CR）和濒危（EN）物种",
+        provPieTitle: "本省保护级别构成", lv1: "一级", lv2: "二级",
+        provPieHint: "一级多为珍稀濒危，保护优先级更高",
+        filterAll: "全部", filterLv1: "一级", filterLv2: "二级",
+        statsTitle: "各省保护动物数量排名", statsHint: "点击柱子可切换到该省份",
+        catTitle: "物种类别构成", catHint: "点击扇区可查看该类别物种",
+        compareTitle: "物种对比", compareDesc: "并排对比两种保护动物的特征与分布",
+        mapView: "地图查看", detail: "详情",
+        wiki: "维基百科详情 ↗", viewMap: "在地图上查看",
+        addCompare: "＋ 加入对比（最多 2 个物种）", inCompare: "已加入对比 ✓（再点移除）",
+        noDesc: "暂无简介", noDist: "暂无分布数据",
+        provDist: "分布", distProv: "分布省份",
+        searchPlaceholder: "搜索保护动物（如：雪豹 / 大熊猫）",
+        loadingMap: "地图数据加载中…", loadingSpecies: "物种数据加载中…",
+        loadError: "数据加载失败，请检查网络后刷新页面", reload: "重新加载",
+        iucnNone: "IUCN 未收录", national: "国家",
+        emptyProv: "该省份暂未收录保护动物分布数据", emptyProvRisk: "该省份暂无极危或濒危物种",
+        emptyFilter: "暂无", emptyFilterSuffix: "保护动物",
+        noResult: "未找到相关的保护动物",
+        mapTooltipCount: "保护动物：", mapTooltipRisk: "极危/濒危物种：",
+        speciesUnit: "种", provUnit: "种保护动物", riskUnit: "种濒危物种", provCountUnit: "省",
+        navSubTemplate: "已收录 {provinces} 个省级地区 / {species} 种保护动物",
+        gradRich: "物种丰富", gradPoor: "稀少",
+        gradRiskMuch: "极危/濒危多", gradRiskFew: "少"
+      },
+      zht: {
+        title: "中國野生動物分佈地圖", navSub: "國家保護野生動物 · 省級分佈概況",
+        catBtn: "按種類", modeCount: "物種數量", modeRisk: "瀕危熱力",
+        tabList: "物種分佈", tabStats: "統計分析",
+        panelHint: "點擊左側地圖省份，查看該省保護動物分佈",
+        panelHintRisk: "瀕危熱力模式下僅顯示極危（CR）和瀕危（EN）物種",
+        provPieTitle: "本省保護級別構成", lv1: "一級", lv2: "二級",
+        provPieHint: "一級多為珍稀瀕危，保護優先級更高",
+        filterAll: "全部", filterLv1: "一級", filterLv2: "二級",
+        statsTitle: "各省保護動物數量排名", statsHint: "點擊柱子可切換到該省份",
+        catTitle: "物種類別構成", catHint: "點擊扇區可查看該類別物種",
+        compareTitle: "物種對比", compareDesc: "並排對比兩種保護動物的特徵與分佈",
+        mapView: "地圖查看", detail: "詳情",
+        wiki: "維基百科詳情 ↗", viewMap: "在地圖上查看",
+        addCompare: "＋ 加入對比（最多 2 個物種）", inCompare: "已加入對比 ✓（再點移除）",
+        noDesc: "暫無簡介", noDist: "暫無分佈數據",
+        provDist: "分佈", distProv: "分佈省份",
+        searchPlaceholder: "搜索保護動物（如：雪豹 / 大熊貓）",
+        loadingMap: "地圖數據加載中…", loadingSpecies: "物種數據加載中…",
+        loadError: "數據加載失敗，請檢查網絡後刷新頁面", reload: "重新加載",
+        iucnNone: "IUCN 未收錄", national: "國家",
+        emptyProv: "該省份暫未收錄保護動物分佈數據", emptyProvRisk: "該省份暫無極危或瀕危物種",
+        emptyFilter: "暫無", emptyFilterSuffix: "保護動物",
+        noResult: "未找到相關的保護動物",
+        mapTooltipCount: "保護動物：", mapTooltipRisk: "極危/瀕危物種：",
+        speciesUnit: "種", provUnit: "種保護動物", riskUnit: "種瀕危物種", provCountUnit: "省",
+        navSubTemplate: "已收錄 {provinces} 個省級地區 / {species} 種保護動物",
+        gradRich: "物種豐富", gradPoor: "稀少",
+        gradRiskMuch: "極危/瀕危多", gradRiskFew: "少"
+      },
+      en: {
+        title: "Wildlife Distribution Map of China", navSub: "National Protected Wildlife · Provincial Distribution",
+        catBtn: "By Category", modeCount: "Species Count", modeRisk: "Endangered Heatmap",
+        tabList: "Species List", tabStats: "Statistics",
+        panelHint: "Click a province on the map to view protected species",
+        panelHintRisk: "Endangered mode: only CR and EN species shown",
+        provPieTitle: "Protection Level Breakdown", lv1: "Class I", lv2: "Class II",
+        provPieHint: "Class I species are rarer, higher protection priority",
+        filterAll: "All", filterLv1: "Class I", filterLv2: "Class II",
+        statsTitle: "Species Count by Province", statsHint: "Click a bar to switch province",
+        catTitle: "Species by Category", catHint: "Click a sector to view species",
+        compareTitle: "Species Comparison", compareDesc: "Compare features and distribution of two species",
+        mapView: "View on Map", detail: "Details",
+        wiki: "Wikipedia ↗", viewMap: "View on Map",
+        addCompare: "＋ Add to Compare (max 2)", inCompare: "In Compare ✓ (click to remove)",
+        noDesc: "No description available", noDist: "No distribution data",
+        provDist: "Distribution", distProv: "Distribution Provinces",
+        searchPlaceholder: "Search protected species...",
+        loadingMap: "Loading map data…", loadingSpecies: "Loading species data…",
+        loadError: "Failed to load data. Please check your network.", reload: "Reload",
+        iucnNone: "IUCN Not Assessed", national: "National",
+        emptyProv: "No protected species recorded for this province",
+        emptyProvRisk: "No CR or EN species in this province",
+        emptyFilter: "No", emptyFilterSuffix: "species",
+        noResult: "No matching species found",
+        mapTooltipCount: "Protected: ", mapTooltipRisk: "CR/EN: ",
+        speciesUnit: "spp", provUnit: "species", riskUnit: "CR/EN species", provCountUnit: " provinces",
+        navSubTemplate: "{provinces} regions / {species} species",
+        gradRich: "Rich", gradPoor: "Sparse",
+        gradRiskMuch: "More CR/EN", gradRiskFew: "Few"
+      }
+    };
+    function t(key) { return (I18N[LANG] && I18N[LANG][key]) || (I18N.zhs[key]) || key; }
+    /* 类别名称翻译 */
+    const CAT_I18N = {
+      zhs: { "哺乳动物":"哺乳动物","鸟类":"鸟类","爬行动物":"爬行动物","两栖动物":"两栖动物","鱼类":"鱼类","昆虫":"昆虫","软体动物":"软体动物","节肢动物":"节肢动物","其他无脊椎动物":"其他无脊椎动物" },
+      zht: { "哺乳动物":"哺乳動物","鸟类":"鳥類","爬行动物":"爬行動物","两栖动物":"兩棲動物","鱼类":"魚類","昆虫":"昆蟲","软体动物":"軟體動物","节肢动物":"節肢動物","其他无脊椎动物":"其他無脊椎動物" },
+      en: { "哺乳动物":"Mammals","鸟类":"Birds","爬行动物":"Reptiles","两栖动物":"Amphibians","鱼类":"Fish","昆虫":"Insects","软体动物":"Mollusks","节肢动物":"Arthropods","其他无脊椎动物":"Other Invertebrates" }
+    };
+    function catName(c) { return (CAT_I18N[LANG] && CAT_I18N[LANG][c]) || c; }
+    /* 省份名称翻译 */
+    const PROV_I18N = {
+      zhs: { "上海市":"上海市","云南省":"云南省","内蒙古自治区":"内蒙古自治区","北京市":"北京市","台湾省":"台湾省","吉林省":"吉林省","四川省":"四川省","天津市":"天津市","宁夏回族自治区":"宁夏回族自治区","安徽省":"安徽省","山东省":"山东省","山西省":"山西省","广东省":"广东省","广西壮族自治区":"广西壮族自治区","新疆维吾尔自治区":"新疆维吾尔自治区","江苏省":"江苏省","江西省":"江西省","河北省":"河北省","河南省":"河南省","浙江省":"浙江省","海南省":"海南省","湖北省":"湖北省","湖南省":"湖南省","澳门特别行政区":"澳门特别行政区","甘肃省":"甘肃省","福建省":"福建省","西藏自治区":"西藏自治区","贵州省":"贵州省","辽宁省":"辽宁省","重庆市":"重庆市","陕西省":"陕西省","青海省":"青海省","香港特别行政区":"香港特别行政区","黑龙江省":"黑龙江省" },
+      zht: { "上海市":"上海市","云南省":"雲南省","内蒙古自治区":"內蒙古自治區","北京市":"北京市","台湾省":"臺灣省","吉林省":"吉林省","四川省":"四川省","天津市":"天津市","宁夏回族自治区":"寧夏回族自治區","安徽省":"安徽省","山东省":"山東省","山西省":"山西省","广东省":"廣東省","广西壮族自治区":"廣西壯族自治區","新疆维吾尔自治区":"新疆維吾爾自治區","江苏省":"江蘇省","江西省":"江西省","河北省":"河北省","河南省":"河南省","浙江省":"浙江省","海南省":"海南省","湖北省":"湖北省","湖南省":"湖南省","澳门特别行政区":"澳門特別行政區","甘肃省":"甘肅省","福建省":"福建省","西藏自治区":"西藏自治區","贵州省":"貴州省","辽宁省":"遼寧省","重庆市":"重慶市","陕西省":"陝西省","青海省":"青海省","香港特别行政区":"香港特別行政區","黑龙江省":"黑龍江省" },
+      en: { "上海市":"Shanghai","云南省":"Yunnan","内蒙古自治区":"Inner Mongolia","北京市":"Beijing","台湾省":"Taiwan","吉林省":"Jilin","四川省":"Sichuan","天津市":"Tianjin","宁夏回族自治区":"Ningxia","安徽省":"Anhui","山东省":"Shandong","山西省":"Shanxi","广东省":"Guangdong","广西壮族自治区":"Guangxi","新疆维吾尔自治区":"Xinjiang","江苏省":"Jiangsu","江西省":"Jiangxi","河北省":"Hebei","河南省":"Henan","浙江省":"Zhejiang","海南省":"Hainan","湖北省":"Hubei","湖南省":"Hunan","澳门特别行政区":"Macau","甘肃省":"Gansu","福建省":"Fujian","西藏自治区":"Tibet","贵州省":"Guizhou","辽宁省":"Liaoning","重庆市":"Chongqing","陕西省":"Shaanxi","青海省":"Qinghai","香港特别行政区":"Hong Kong","黑龙江省":"Heilongjiang" }
+    };
+    function provName(p) { return (PROV_I18N[LANG] && PROV_I18N[LANG][p]) || p; }
 
     let species = [], byProvince = {}, countByProvince = {}, riskCount = {}, geo = null;
     let currentProvince = DEFAULT_PROVINCE, levelFilter = "全部";
@@ -336,17 +446,61 @@
           (active ? "bg-white text-[#1b4332] shadow" : "text-[#dbe7dd] hover:bg-white/10");
       });
     }
+    function applyI18nUI() {
+      // 更新所有带 data-i18n 属性的静态文本
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.dataset.i18n;
+        const txt = t(key);
+        if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+          el.placeholder = txt;
+        } else {
+          el.textContent = txt;
+        }
+      });
+      // 更新动态文本
+      document.getElementById("filterBar").querySelectorAll(".lv-chip").forEach(b => {
+        const k = b.dataset.lv === "全部" ? "filterAll" : b.dataset.lv === "一级" ? "filterLv1" : "filterLv2";
+        b.textContent = t(k);
+      });
+      document.getElementById("navSub").textContent = (() => {
+        const provCount = Object.keys(countByProvince).length;
+        const spCount = species.length;
+        return provCount && spCount
+          ? t("navSubTemplate").replace("{provinces}", provCount).replace("{species}", spCount)
+          : t("navSub");
+      })();
+      // 更新省份统计
+      document.getElementById("provinceName").textContent = provName(currentProvince);
+      const isRisk = mapMode === "risk";
+      const total = (byProvince[currentProvince] || []).length;
+      document.getElementById("provinceCount").textContent = total + (isRisk ? " " + t("riskUnit") : " " + t("provUnit"));
+      // 更新搜索框占位
+      document.getElementById("searchInput").placeholder = t("searchPlaceholder");
+      // 更新地图加载/错误提示
+      document.querySelector("#mapLoading span").textContent = t("loadingMap");
+      const errSpan = document.querySelector("#mapError span");
+      if (errSpan) errSpan.textContent = t("loadError");
+      const reloadBtn = document.querySelector("#mapError button");
+      if (reloadBtn) reloadBtn.textContent = t("reload");
+      // 更新面板加载提示
+      document.getElementById("panelLoading").textContent = t("loadingSpecies");
+    }
     function applyLang(lang) {
       LANG = lang;
       localStorage.setItem("wm-lang", lang);
       if (!species.length) { paintLangBtns(); return; }
       remapDesc(lang);
+      applyI18nUI();
       paintLangBtns();
-      // 重渲染当前可见内容（省份卡片 / 搜索下拉 / 详情抽屉 / 对比面板）
+      // 重渲染当前可见内容（省份卡片 / 搜索下拉 / 详情抽屉 / 对比面板 / 统计图表）
       renderPanel();
       if (!searchDropdown.classList.contains("hidden")) doSearch();
       if (openDetailName && !document.getElementById("drawer").classList.contains("hidden")) openDetail(openDetailName);
       if (!document.getElementById("compareModal").classList.contains("hidden")) openCompare();
+      // 重建统计图表（语言变化需要更新标签）
+      if (rankChart || catChart) { rankChart = catChart = null; if (currentTab === "stats") renderStats(); }
+      // 更新地图标题
+      if (chart && geo) chart.setOption(buildMapOption(true), true);
     }
     document.getElementById("langSwitch").addEventListener("click", function (e) {
       const btn = e.target.closest(".lang-btn"); if (!btn) return;
@@ -363,7 +517,11 @@
         if (s.iucn === "CR" || s.iucn === "EN") riskCount[p] = (riskCount[p] || 0) + 1;
       }
     }
-    const displayName = n => DISPLAY[n] || n;
+    const displayName = n => {
+      if (LANG === "en") { const s = findSpecies(n); return s ? (s.en_name || s.scientific || n) : n; }
+      if (LANG === "zht") { const s = findSpecies(n); return s ? (s.wiki_title || n) : n; }
+      return DISPLAY[n] || n;
+    };
     const byName = {};
     const findSpecies = n => byName[n] || null;
     const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -388,15 +546,15 @@
         ? Math.max.apply(null, Object.values(riskCount).concat([0])) || 1
         : Math.max.apply(null, Object.values(countByProvince)) || 1;
       const range = useRisk
-        ? { text: ["极危/濒危多", "少"], colors: ["#fdece3", "#f7c9b3", "#e8895e", "#c94f30", "#8c1c13"] }
-        : { text: ["物种丰富", "稀少"], colors: ["#eef4e6", "#c9e3c4", "#8ec592", "#4b9d63", "#1e6f43"] };
+        ? { text: [t("gradRiskMuch"), t("gradRiskFew")], colors: ["#fdece3", "#f7c9b3", "#e8895e", "#c94f30", "#8c1c13"] }
+        : { text: [t("gradRich"), t("gradPoor")], colors: ["#eef4e6", "#c9e3c4", "#8ec592", "#4b9d63", "#1e6f43"] };
       return {
         tooltip: {
           trigger: "item", backgroundColor: "rgba(27,67,50,0.95)", borderColor: "#1b4332",
           padding: [8, 12], textStyle: { color: "#f6f3ec", fontSize: 12 },
           formatter: p => "<strong>" + p.name + "</strong><br/>" +
-            (mapMode === "risk" ? "极危/濒危物种：" + (riskCount[p.name] || 0) + " 种"
-                                : "保护动物：" + (countByProvince[p.name] || 0) + " 种")
+            (mapMode === "risk" ? t("mapTooltipRisk") + (riskCount[p.name] || 0) + " " + t("speciesUnit")
+                                : t("mapTooltipCount") + (countByProvince[p.name] || 0) + " " + t("speciesUnit"))
         },
         visualMap: withVmap ? {
           min: 0, max: maxV,
@@ -438,7 +596,8 @@
     /* ==================== 级别徽章 ==================== */
     function levelBadge(lv) {
       const cls = lv === "二级" ? "bg-[#e3c9a2] text-[#5a432a]" : "bg-[#1b4332] text-[#f2f7f3]";
-      return `<span class="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full ${cls}">${lv}</span>`;
+      const label = lv === "二级" ? t("lv2") : t("lv1");
+      return `<span class="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full ${cls}">${label}</span>`;
     }
 
     /* ==================== 图片区块（有图 / 无图精美占位） ==================== */
@@ -506,10 +665,10 @@
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#7a9b6d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M4 7h16"/><path d="M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>
             </svg>
-            <span>${s.category}</span>
+            <span>${catName(s.category)}</span>
             ${s.iucn ? `<span class="text-[#b45309]">· IUCN ${s.iucn}</span>` : ""}
           </div>
-          <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--tx-2)] line-clamp-2">${s.desc || "暂无简介"}</p>
+          <p class="mt-1.5 text-[12.5px] leading-relaxed text-[var(--tx-2)] line-clamp-2">${s.desc || t("noDesc")}</p>
           <div class="mt-1">${wikiLink}</div>
         </div>
       </article>`;
@@ -517,17 +676,19 @@
 
     /* 省份保护级别构成环形图 */
     function renderProvPie() {
+      const isRisk = mapMode === "risk";
       const list = byProvince[currentProvince] || [];
-      const lv1 = list.filter(s => s.level === "一级").length;
-      const lv2 = list.filter(s => s.level === "二级").length;
-      const total = list.length;
+      const filtered = isRisk ? list.filter(s => s.iucn === "CR" || s.iucn === "EN") : list;
+      const lv1 = filtered.filter(s => s.level === "一级").length;
+      const lv2 = filtered.filter(s => s.level === "二级").length;
+      const total = filtered.length;
       document.getElementById("provPieTotal").textContent = total || "—";
       document.getElementById("provPieLv1").textContent = lv1;
       document.getElementById("provPieLv2").textContent = lv2;
       if (provPieChart) provPieChart.destroy();
       provPieChart = new Chart(document.getElementById("provPie"), {
         type: "doughnut",
-        data: { labels: ["一级", "二级"], datasets: [{ data: [lv1, lv2],
+        data: { labels: [t("lv1"), t("lv2")], datasets: [{ data: [lv1, lv2],
           backgroundColor: ["#1b4332", "#e3c9a2"], borderColor: cssVar("--bg-card"), borderWidth: 3 }] },
         options: { responsive: true, maintainAspectRatio: true, cutout: "62%",
           plugins: { legend: { display: false }, tooltip: { enabled: false } } }
@@ -535,15 +696,23 @@
     }
 
     function renderPanel() {
-      const total = (byProvince[currentProvince] || []).length;
-      const list = (byProvince[currentProvince] || []).filter(s => levelFilter === "全部" || s.level === levelFilter);
-      document.getElementById("provinceName").textContent = currentProvince;
-      document.getElementById("provinceCount").textContent = total + " 种保护动物";
+      const isRisk = mapMode === "risk";
+      const allProvSpecies = byProvince[currentProvince] || [];
+      const total = isRisk ? allProvSpecies.filter(s => s.iucn === "CR" || s.iucn === "EN").length : allProvSpecies.length;
+      const list = allProvSpecies.filter(s => {
+        const matchLevel = levelFilter === "全部" || s.level === levelFilter;
+        const matchRisk = !isRisk || s.iucn === "CR" || s.iucn === "EN";
+        return matchLevel && matchRisk;
+      });
+      document.getElementById("provinceName").textContent = provName(currentProvince);
+      document.getElementById("provinceCount").textContent = total + (isRisk ? " " + t("riskUnit") : " " + t("provUnit"));
       renderProvPie();
+      // 更新提示文字
+      document.querySelector("#tabList > [data-i18n=panelHint]").textContent = isRisk ? t("panelHintRisk") : t("panelHint");
       if (!total) {
-        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[var(--tx-3)]">该省份暂未收录保护动物分布数据</div>`;
+        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[var(--tx-3)]">${isRisk ? t("emptyProvRisk") : t("emptyProv")}</div>`;
       } else if (!list.length) {
-        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[var(--tx-3)]">该省份暂无「${levelFilter}」保护动物</div>`;
+        cardsEl.innerHTML = `<div class="fade-up py-16 text-center text-sm text-[var(--tx-3)]">${t("emptyFilter")}「${levelFilter}」${t("emptyFilterSuffix")}</div>`;
       } else {
         cardsEl.innerHTML = list.map(cardHTML).join("");
       }
@@ -573,6 +742,7 @@
       });
       if (highlightSpecies) clearHighlight();
       if (chart && geo) chart.setOption(buildMapOption(true), true);
+      renderPanel();
       labelShow = true; // 视图回到默认缩放，标签恢复显示
     }
     document.getElementById("modeCountBtn").addEventListener("click", () => setMapMode("count"));
@@ -606,7 +776,7 @@
         options: {
           indexAxis: "y", responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false },
-            tooltip: { callbacks: { label: c => c.parsed.x + " 种保护动物" } } },
+            tooltip: { callbacks: { label: c => c.parsed.x + " " + t("speciesUnit") } } },
           scales: { x: { grid: { color: cssVar("--chart-grid") }, ticks: { font: { size: 10 }, color: cssVar("--tx-3") } },
                     y: { grid: { display: false }, ticks: { font: { size: 9 }, color: cssVar("--tx-2") } } },
           onClick: (e, els) => { if (els.length) selectProvince(entries[els[0].index][0]); }
@@ -617,12 +787,12 @@
       if (catChart) catChart.destroy();
       catChart = new Chart(document.getElementById("catChart"), {
         type: "doughnut",
-        data: { labels: CATEGORIES, datasets: [{ data: counts, backgroundColor: CAT_COLORS, borderColor: cssVar("--chart-border"), borderWidth: 2 }] },
+        data: { labels: CATEGORIES.map(catName), datasets: [{ data: counts, backgroundColor: CAT_COLORS, borderColor: cssVar("--chart-border"), borderWidth: 2 }] },
         options: {
           responsive: true, maintainAspectRatio: false, cutout: "58%",
           plugins: {
             legend: { position: "right", labels: { font: { size: 11 }, color: cssVar("--tx-2"), boxWidth: 12, padding: 10 } },
-            tooltip: { callbacks: { label: c => ` ${c.label}：${c.parsed} 种` } }
+            tooltip: { callbacks: { label: c => ` ${c.label}：${c.parsed} ` + t("speciesUnit") } }
           },
           onClick: (e, els) => { if (els.length) openCategory(CATEGORIES[els[0].index]); }
         }
@@ -634,7 +804,7 @@
     function renderCatDropdown() {
       document.getElementById("catDropdownList").innerHTML = CATEGORIES.map(c => `
         <button onclick="openCategory('${c}')" class="w-full text-left px-4 py-2 text-[13px] text-[var(--tx-2)] hover:bg-[var(--bg-hover)] flex items-center justify-between">
-          <span>${c}</span><span class="text-[11px] text-[var(--tx-3)]">${catCount(c)}</span>
+          <span>${catName(c)}</span><span class="text-[11px] text-[var(--tx-3)]">${catCount(c)}</span>
         </button>`).join("");
     }
     document.getElementById("catBtn").addEventListener("click", function () {
@@ -645,8 +815,8 @@
     function openCategory(cat) {
       document.getElementById("catDropdown").classList.add("hidden");
       const list = species.filter(s => s.category === cat).sort((a, b) => a.name.localeCompare(b.name, "zh"));
-      document.getElementById("modalTitle").textContent = cat;
-      document.getElementById("modalCount").textContent = list.length + " 种";
+      document.getElementById("modalTitle").textContent = catName(cat);
+      document.getElementById("modalCount").textContent = list.length + " " + t("speciesUnit");
       document.getElementById("modalGrid").innerHTML = list.map(s => `
         <button onclick="openDetail('${s.name}')" class="fade-up text-left bg-[var(--bg-card)] rounded-2xl overflow-hidden border border-[var(--br-2)] hover:border-[#c9dfc4] hover:shadow-md transition">
           <div class="img-wrap h-28 overflow-hidden" data-size="banner">${imgBlock(s, "banner", "w-full h-full object-cover")}</div>
@@ -671,16 +841,13 @@
         compareList.push(s);
       }
       const btn = document.getElementById("drawerCompare");
-      const names = compareList.map(x => displayName(x.name)).join(" vs ");
-      btn.textContent = compareList.length
-        ? `已选 ${compareList.length}/2：${names}${compareList.length === 2 ? "（再点击查看对比）" : ""}`
-        : "＋ 加入对比（最多 2 个物种）";
+      btn.textContent = compareList.some(x => x.name === s.name) ? t("inCompare") : t("addCompare");
       if (compareList.length === 2) openCompare();
     }
     function openCompare() {
       document.getElementById("compareGrid").innerHTML = compareList.map(s => {
         const latin = [s.scientific || "", s.en_name ? "· " + s.en_name : ""].filter(Boolean).join(" ");
-        const provTxt = s.provinces.length ? s.provinces.join("、") : "暂无分布数据";
+        const provTxt = s.provinces.length ? s.provinces.map(provName).join("、") : t("noDist");
         return `
         <div class="bg-[var(--bg-card)] rounded-2xl overflow-hidden border border-[var(--br-2)] shadow-sm fade-up">
           <div class="img-wrap h-36 overflow-hidden" data-size="banner">${imgBlock(s, "banner", "w-full h-full object-cover")}</div>
@@ -691,18 +858,18 @@
             </div>
             <div class="mt-0.5 text-[12px] text-[var(--tx-3)] italic truncate">${latin || "—"}</div>
             <div class="mt-2 flex flex-wrap gap-1.5">
-              <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green-2)]">${s.category}</span>
-              <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]">${s.iucn ? "IUCN " + s.iucn : "IUCN 未收录"}</span>
+              <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green-2)]">${catName(s.category)}</span>
+              <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]">${s.iucn ? "IUCN " + s.iucn : t("iucnNone")}</span>
             </div>
-            <p class="mt-2.5 text-[12px] leading-relaxed text-[var(--tx-2)] line-clamp-3">${s.desc || "暂无简介"}</p>
+            <p class="mt-2.5 text-[12px] leading-relaxed text-[var(--tx-2)] line-clamp-3">${s.desc || t("noDesc")}</p>
             <div class="mt-3 pt-3 border-t border-[var(--br-2)]">
-              <div class="text-[10.5px] font-bold text-[var(--tx-head)] mb-1.5">分布（${s.provinces.length} 省）</div>
+              <div class="text-[10.5px] font-bold text-[var(--tx-head)] mb-1.5">${t("provDist")}（${s.provinces.length} ${t("speciesUnit")}）</div>
               <p class="text-[11px] leading-relaxed text-[var(--tx-3)]">${provTxt}</p>
             </div>
             <div class="mt-3 flex items-center gap-2">
               <button onclick="setHighlight(findSpecies('${s.name}')); document.getElementById('compareModal').classList.add('hidden')"
-                class="flex-1 text-[12px] font-medium px-3 py-1.5 rounded-full bg-[#1b4332] text-white hover:bg-[#2d6a4f] transition">地图查看</button>
-              <button onclick="openDetail('${s.name}')" class="flex-1 text-[12px] font-medium px-3 py-1.5 rounded-full bg-[var(--bg-soft)] text-[var(--tx-2)] hover:bg-[var(--bg-hover)] transition">详情</button>
+                class="flex-1 text-[12px] font-medium px-3 py-1.5 rounded-full bg-[#1b4332] text-white hover:bg-[#2d6a4f] transition">${t("mapView")}</button>
+              <button onclick="openDetail('${s.name}')" class="flex-1 text-[12px] font-medium px-3 py-1.5 rounded-full bg-[var(--bg-soft)] text-[var(--tx-2)] hover:bg-[var(--bg-hover)] transition">${t("detail")}</button>
             </div>
           </div>
         </div>`;
@@ -718,24 +885,25 @@
       const s = findSpecies(name); if (!s) return;
       openDetailName = s.name;
       document.getElementById("categoryModal").classList.add("hidden");
+      document.getElementById("compareModal").classList.add("hidden");
       document.getElementById("searchDropdown").classList.add("hidden");
       document.getElementById("drawerImg").innerHTML = imgBlock(s, "banner", "w-full h-full object-cover");
       document.getElementById("drawerName").textContent = displayName(s.name);
-      document.getElementById("drawerLevel").textContent = "国家" + s.level;
+      document.getElementById("drawerLevel").textContent = t("national") + (s.level === "二级" ? t("lv2") : t("lv1"));
       document.getElementById("drawerLevel").className = "shrink-0 text-xs font-medium px-3 py-1 rounded-full " +
         (s.level === "二级" ? "bg-[#e3c9a2] text-[#5a432a]" : "bg-[#1b4332] text-white");
       const latin = [s.scientific || "", s.en_name ? "· " + s.en_name : ""].filter(Boolean).join(" ");
       document.getElementById("drawerLatin").textContent = latin || "—";
-      document.getElementById("drawerCat").textContent = s.category;
+      document.getElementById("drawerCat").textContent = catName(s.category);
       const iucnEl = document.getElementById("drawerIucn");
       if (s.iucn) {
         iucnEl.textContent = "IUCN " + s.iucn + " · " + (s.iucn_cn || "");
         iucnEl.className = "text-[11px] px-2.5 py-1 rounded-full " + (IUCN_CLS[s.iucn] || "bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]");
       } else {
-        iucnEl.textContent = "IUCN 未收录";
+        iucnEl.textContent = t("iucnNone");
         iucnEl.className = "text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-amber-soft)] text-[var(--tx-amber)]";
       }
-      document.getElementById("drawerDesc").textContent = s.desc || "暂无简介";
+      document.getElementById("drawerDesc").textContent = s.desc || t("noDesc");
       const faunaEl = document.getElementById("drawerFauna");
       const fauna = s.fauna && s.fauna.items && Object.keys(s.fauna.items).length ? s.fauna : null;
       if (fauna) {
@@ -757,7 +925,7 @@
       }
       document.getElementById("drawerProvCount").textContent = s.provinces.length;
       document.getElementById("drawerProvs").innerHTML = s.provinces.map(p =>
-        `<button onclick="selectProvince('${p}')" class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green)] hover:bg-[var(--bg-green-soft2)] transition">${p}</button>`).join("");
+        `<button onclick="selectProvince('${p}')" class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green)] hover:bg-[var(--bg-green-soft2)] transition">${provName(p)}</button>`).join("");
       const wiki = document.getElementById("drawerWiki");
       if (s.wiki) { wiki.href = s.wiki; wiki.classList.remove("pointer-events-none", "opacity-40"); }
       else { wiki.href = "#"; wiki.classList.add("pointer-events-none", "opacity-40"); }
@@ -765,7 +933,7 @@
       const cmpBtn = document.getElementById("drawerCompare");
       cmpBtn.onclick = () => { toggleCompare(s); };
       const inCmp = compareList.some(x => x.name === s.name);
-      cmpBtn.textContent = inCmp ? "已加入对比 ✓（再点移除）" : "＋ 加入对比（最多 2 个物种）";
+      cmpBtn.textContent = inCmp ? t("inCompare") : t("addCompare");
       document.getElementById("drawer").classList.remove("hidden");
     }
     function closeDrawer() { document.getElementById("drawer").classList.add("hidden"); }
@@ -784,7 +952,7 @@
         (s.scientific || "").toLowerCase().includes(kw.toLowerCase()) ||
         (s.en_name || "").toLowerCase().includes(kw.toLowerCase())).slice(0, 12);
       if (!results.length) {
-        searchDropdown.innerHTML = `<div class="px-4 py-6 text-center text-sm text-[var(--tx-3)]">未找到与「${kw}」相关的保护动物</div>`;
+        searchDropdown.innerHTML = `<div class="px-4 py-6 text-center text-sm text-[var(--tx-3)]">${t("noResult")}</div>`;
       } else {
         searchDropdown.innerHTML = results.map(s => `
           <button onclick="openDetail('${s.name}'); this.closest('#searchDropdown').classList.add('hidden')"
@@ -794,9 +962,9 @@
             </div>
             <div class="min-w-0 flex-1">
               <div class="text-[13px] font-medium text-[var(--tx)] truncate">${displayName(s.name)}</div>
-              <div class="text-[11px] text-[var(--tx-3)]">${s.category} · ${s.level}</div>
+              <div class="text-[11px] text-[var(--tx-3)]">${catName(s.category)} · ${s.level === "二级" ? t("lv2") : t("lv1")}</div>
             </div>
-            <span class="text-[10px] text-[var(--tx-green-2)] whitespace-nowrap">${s.provinces.length}省</span>
+            <span class="text-[10px] text-[var(--tx-green-2)] whitespace-nowrap">${s.provinces.length}${t("provCountUnit")}</span>
           </button>`).join("");
       }
       searchDropdown.classList.remove("hidden");
@@ -853,12 +1021,13 @@
         species = data.species || [];
         species.forEach(s => { byName[s.name] = s; });
         remapDesc(LANG);
+        applyI18nUI();
         paintLangBtns();
         buildIndex(species);
 
         const provCount = Object.keys(countByProvince).length;
         document.getElementById("navSub").textContent =
-          "已收录 " + provCount + " 个省级地区 / " + species.length + " 种保护动物";
+          t("navSubTemplate").replace("{provinces}", provCount).replace("{species}", species.length);
 
         echarts.registerMap("china", geo);
         renderChart();
