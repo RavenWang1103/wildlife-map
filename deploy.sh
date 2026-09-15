@@ -15,7 +15,7 @@ BRANCH="main"
 WAIT_MAX=300                        # 等待 Pages 重建的最长秒数
 MSG="${1:-feat: 更新}"
 # 需要校验与本地逐字节一致的线上文件（路径即本地相对路径）
-FILES=("index.html" "data/animals.json" "data/100000_full.json" "css/tailwind.css")
+FILES=("index.html" "data/animals.json" "data/100000_full.json" "data/reserves.json" "css/tailwind.css")
 
 say() { printf '%s\n' "$*"; }
 die() { say "失败: $*"; exit 1; }
@@ -33,7 +33,7 @@ say "  待提交/未跟踪文件:"
 git status --short || true
 
 say "==> [2/4] 提交并推送"
-git add index.html css/tailwind.css data/ scripts/ web_2.py server.py deploy.sh
+git add index.html css/tailwind.css data/ scripts/ deploy.sh web.py wildlife_map.py
 if git diff --cached --quiet; then
   say "  没有需要提交的更改，跳过提交"
 else
