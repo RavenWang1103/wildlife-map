@@ -117,11 +117,15 @@
     <section class="relative w-full lg:w-[70%] h-[50vh] lg:h-full bg-[var(--bg-map)]">
       <div id="mapChart"></div>
 
-      <!-- 地图模式切换（物种数量 / 濒危物种） -->
+      <!-- 地图模式切换（物种数量 / 濒危物种 / 自然保护区） -->
       <div class="absolute top-3 left-3 z-20 flex items-center gap-1 bg-[var(--bg-card)]/90 backdrop-blur rounded-full p-1 shadow border border-[var(--br)]">
         <button id="modeCountBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeCount">物种数量</button>
         <button id="modeRiskBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeRisk">濒危热力</button>
+        <button id="modeReserveBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeReserve">自然保护区</button>
       </div>
+
+      <!-- 保护区类型图例：开启图层后出现，可逐类开关 -->
+      <div id="resLegend" class="hidden absolute top-14 left-3 z-20 w-[150px] max-h-[calc(100%_-_4.5rem)] overflow-y-auto bg-[var(--bg-card)] rounded-2xl shadow border border-[var(--br)] p-2.5"></div>
 
       <!-- 单物种高亮提示条 -->
       <div id="highlightBanner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-20 bg-[#1b4332]/95 text-[#f6f3ec] text-xs rounded-full pl-4 pr-2 py-1.5 shadow-lg flex items-center gap-3">
@@ -162,6 +166,8 @@
             <span id="provinceCount" class="shrink-0 text-xs font-medium text-[var(--tx-head)] bg-[var(--bg-green-soft2)] px-3 py-1 rounded-full whitespace-nowrap">-- 种保护动物</span>
           </div>
           <p class="mt-2 text-xs text-[var(--tx-3)]" data-i18n="panelHint">点击左侧地图省份，查看该省保护动物分布</p>
+          <!-- 本省国家级自然保护区（名录口径，含未定位坐标的条目） -->
+          <div id="provReserves" class="hidden mt-3"></div>
           <!-- 省份物种构成（一级 / 二级） -->
           <div class="mt-3 flex items-center gap-4 bg-[var(--bg-card)] rounded-2xl border border-[var(--br-2)] p-3">
             <div class="relative w-16 h-16 shrink-0">
@@ -202,7 +208,7 @@
         </div>
 
         <p class="mt-6 text-[10.5px] leading-relaxed text-[var(--tx-3)]">
-          物种图片与简介来源于维基百科（遵循 CC BY-SA 4.0 及其各自授权）；部分图片来源于 iNaturalist 观察（遵循 CC BY-NC / CC BY 等授权）；动物志描述来源于中国科学院《中国动物主题数据库》；物种名录依据 2021 版《国家重点保护野生动物名录》；IUCN 等级与学名来源于维基数据；省级分布为公开资料整理，仅供科普展示。
+          物种图片与简介来源于维基百科（遵循 CC BY-SA 4.0 及其各自授权）；部分图片来源于 iNaturalist 观察（遵循 CC BY-NC / CC BY 等授权）；动物志描述来源于中国科学院《中国动物主题数据库》；物种名录依据 2021 版《国家重点保护野生动物名录》；IUCN 等级与学名来源于维基数据；省级分布为公开资料整理。自然保护区图层依据全国国家级自然保护区名录整理，坐标来源于维基百科、维基数据与 OpenStreetMap，仅收录国家级自然保护区且坐标精度有限。以上内容仅供科普展示。
         </p>
       </div>
     </aside>
@@ -258,6 +264,15 @@
     </div>
   </div>
 
+  <!-- ===== 自然保护区详情抽屉 ===== -->
+  <div id="reserveDrawer" class="hidden fixed inset-0 z-[70]">
+    <div class="absolute inset-0 bg-black/40 fade-in" data-close-reserve></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full md:w-[400px] bg-[var(--bg-card)] shadow-2xl drawer-open flex flex-col overflow-y-auto">
+      <button data-close-reserve class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition">✕</button>
+      <div id="reserveDrawerBody" class="p-5 pt-10 pb-8"></div>
+    </div>
+  </div>
+
   <!-- ===== 物种对比 Modal ===== -->
   <div id="compareModal" class="hidden fixed inset-0 z-[80]">
     <div class="absolute inset-0 bg-black/50 fade-in" data-close-compare></div>
@@ -279,6 +294,7 @@
     /* ==================== 全局状态 ==================== */
     const GEO_URL = "data/100000_full.json";
     const DATA_URL = "data/animals.json";
+    const RES_URL = "data/reserves.json";
     const DEFAULT_PROVINCE = "四川省";
     const DISPLAY = { "虎": "东北虎", "藏羚": "藏羚羊" };
     const CATEGORIES = ["哺乳动物", "鸟类", "爬行动物", "两栖动物", "鱼类", "昆虫", "软体动物", "节肢动物", "其他无脊椎动物"];
@@ -289,6 +305,31 @@
       "LC": "bg-[#4b7a5c] text-white", "DD": "bg-[#a3a396] text-white", "NE": "bg-[#a3a396] text-white"
     };
     const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+    /* ==================== 自然保护区图层常量 ==================== */
+    // 8 类国家级自然保护区；配色避开高亮色 #14532d 与两条 visualMap 色带，防止语义混淆
+    const RES_CATS = ["forest", "grassland", "wetland", "wildlife", "plant", "geology", "marine", "other"];
+    const RES_CAT_COLORS = {
+      forest: "#2f6f4f", grassland: "#a8a13a", wetland: "#3f8fb0", wildlife: "#c2762a",
+      plant: "#7a5aa8", geology: "#9c6b4f", marine: "#1f5f8b", other: "#7b8794"
+    };
+    const RES_CAT_I18N = {
+      zhs: { forest: "森林生态", grassland: "草原草甸", wetland: "湿地", wildlife: "野生动物", plant: "野生植物", geology: "地质遗迹", marine: "海洋海岸", other: "其他" },
+      zht: { forest: "森林生態", grassland: "草原草甸", wetland: "濕地", wildlife: "野生動物", plant: "野生植物", geology: "地質遺跡", marine: "海洋海岸", other: "其他" },
+      en: { forest: "Forest", grassland: "Grassland", wetland: "Wetland", wildlife: "Wildlife", plant: "Wild Plants", geology: "Geological", marine: "Marine", other: "Other" }
+    };
+    function resCatName(c) { return (RES_CAT_I18N[LANG] && RES_CAT_I18N[LANG][c]) || c; }
+    // 键必须与 reserves.json 的 region 字段逐字一致（数据带「地区」后缀）
+    const REGION_I18N = {
+      zhs: { "华北地区": "华北", "东北地区": "东北", "华东地区": "华东", "中南地区": "中南", "西南地区": "西南", "西北地区": "西北" },
+      zht: { "华北地区": "華北", "东北地区": "東北", "华东地区": "華東", "中南地区": "中南", "西南地区": "西南", "西北地区": "西北" },
+      en: { "华北地区": "North China", "东北地区": "Northeast China", "华东地区": "East China", "中南地区": "Central-South China", "西南地区": "Southwest China", "西北地区": "Northwest China" }
+    };
+    function regionName(r) { return (REGION_I18N[LANG] && REGION_I18N[LANG][r]) || r || "—"; }
+    function srcName(s) {
+      const map = { wiki: "srcWiki", wikidata: "srcWikidata", osm: "srcOsm", amap: "srcAmap" };
+      return map[s] ? t(map[s]) : t("srcUnknown");
+    }
 
     /* ==================== 国际化字符串 ==================== */
     const I18N = {
@@ -320,7 +361,16 @@
         speciesUnit: "种", provUnit: "种保护动物", riskUnit: "种濒危物种", provCountUnit: "省",
         navSubTemplate: "已收录 {provinces} 个省级地区 / {species} 种保护动物",
         gradRich: "物种丰富", gradPoor: "稀少",
-        gradRiskMuch: "极危/濒危多", gradRiskFew: "少"
+        gradRiskMuch: "极危/濒危多", gradRiskFew: "少",
+        modeReserve: "自然保护区",
+        resLegendTitle: "保护区类型", resLegendStat: "已定位 {located} / {total} 个",
+        resTooltipProv: "国家级保护区：{total} 个（已定位 {located} 个）",
+        resPanelTitle: "本省国家级自然保护区", resPanelStat: "{located} / {total} 个已定位",
+        resNoCoordTag: "未定位",
+        resCoord: "经纬度", resSource: "坐标来源", resNoCoord: "暂未获取到坐标",
+        resDrawerNote: "仅收录国家级自然保护区；坐标来自公开数据源，精度有限，仅供科普参考。",
+        highlightBannerText: "正在查看「{name}」的分布省份（深色为分布区）",
+        srcWiki: "维基百科", srcWikidata: "维基数据", srcOsm: "OpenStreetMap", srcAmap: "高德地图", srcUnknown: "公开资料"
       },
       zht: {
         title: "中國野生動物分佈地圖", navSub: "國家保護野生動物 · 省級分佈概況",
@@ -350,7 +400,16 @@
         speciesUnit: "種", provUnit: "種保護動物", riskUnit: "種瀕危物種", provCountUnit: "省",
         navSubTemplate: "已收錄 {provinces} 個省級地區 / {species} 種保護動物",
         gradRich: "物種豐富", gradPoor: "稀少",
-        gradRiskMuch: "極危/瀕危多", gradRiskFew: "少"
+        gradRiskMuch: "極危/瀕危多", gradRiskFew: "少",
+        modeReserve: "自然保護區",
+        resLegendTitle: "保護區類型", resLegendStat: "已定位 {located} / {total} 個",
+        resTooltipProv: "國家級保護區：{total} 個（已定位 {located} 個）",
+        resPanelTitle: "本省國家級自然保護區", resPanelStat: "{located} / {total} 個已定位",
+        resNoCoordTag: "未定位",
+        resCoord: "經緯度", resSource: "坐標來源", resNoCoord: "暫未獲取到坐標",
+        resDrawerNote: "僅收錄國家級自然保護區；坐標來自公開數據源，精度有限，僅供科普參考。",
+        highlightBannerText: "正在查看「{name}」的分佈省份（深色為分佈區）",
+        srcWiki: "維基百科", srcWikidata: "維基數據", srcOsm: "OpenStreetMap", srcAmap: "高德地圖", srcUnknown: "公開資料"
       },
       en: {
         title: "Wildlife Distribution Map of China", navSub: "National Protected Wildlife · Provincial Distribution",
@@ -381,7 +440,16 @@
         speciesUnit: "spp", provUnit: "species", riskUnit: "CR/EN species", provCountUnit: " provinces",
         navSubTemplate: "{provinces} regions / {species} species",
         gradRich: "Rich", gradPoor: "Sparse",
-        gradRiskMuch: "More CR/EN", gradRiskFew: "Few"
+        gradRiskMuch: "More CR/EN", gradRiskFew: "Few",
+        modeReserve: "Nature Reserves",
+        resLegendTitle: "Reserve Types", resLegendStat: "{located} / {total} located",
+        resTooltipProv: "National reserves: {total} ({located} located)",
+        resPanelTitle: "National Nature Reserves", resPanelStat: "{located} / {total} located",
+        resNoCoordTag: "no coords",
+        resCoord: "Coordinates", resSource: "Source", resNoCoord: "Coordinates unavailable",
+        resDrawerNote: "National-level nature reserves only. Coordinates come from public sources and may be approximate; for educational reference only.",
+        highlightBannerText: "Showing distribution provinces of “{name}” (darker = distribution area)",
+        srcWiki: "Wikipedia", srcWikidata: "Wikidata", srcOsm: "OpenStreetMap", srcAmap: "Amap", srcUnknown: "Public sources"
       }
     };
     function t(key) { return (I18N[LANG] && I18N[LANG][key]) || (I18N.zhs[key]) || key; }
@@ -405,6 +473,10 @@
     let chart = null, rankChart = null, catChart = null, provPieChart = null, highlightSpecies = null;
     let mapMode = "count";               // 地图模式：count 物种数量 / risk 濒危热力
     let compareList = [];                // 对比列表（最多 2 个）
+    let reserves = [], resByProv = {}, resLocatedByProv = {}, resLocatedCount = 0;
+    let resLayerOn = false;              // 保护区图层开关
+    let resCatOn = {};                   // 保护区类型逐类开关（8 类）
+    let openReserveRec = null;           // 当前打开的保护区（用于切换语言时重渲染）
 
     /* ==================== 主题（深色模式） ==================== */
     function applyTheme(dark) {
@@ -492,11 +564,13 @@
       remapDesc(lang);
       applyI18nUI();
       paintLangBtns();
+      renderResLegend();
       // 重渲染当前可见内容（省份卡片 / 搜索下拉 / 详情抽屉 / 对比面板 / 统计图表）
       renderPanel();
       if (!searchDropdown.classList.contains("hidden")) doSearch();
       if (openDetailName && !document.getElementById("drawer").classList.contains("hidden")) openDetail(openDetailName);
       if (!document.getElementById("compareModal").classList.contains("hidden")) openCompare();
+      if (openReserveRec && !document.getElementById("reserveDrawer").classList.contains("hidden")) openReserveDetail(openReserveRec);
       // 重建统计图表（语言变化需要更新标签）
       if (rankChart || catChart) { rankChart = catChart = null; if (currentTab === "stats") renderStats(); }
       // 更新地图标题
@@ -517,6 +591,20 @@
         if (s.iucn === "CR" || s.iucn === "EN") riskCount[p] = (riskCount[p] || 0) + 1;
       }
     }
+    /* 保护区索引：按省份建名录（含未定位）与已定位两份，供省份兜底清单/提示使用 */
+    function buildReserveIndex(resJson) {
+      reserves = (resJson && Array.isArray(resJson.reserves)) ? resJson.reserves : [];
+      resByProv = {}; resLocatedByProv = {}; resLocatedCount = 0;
+      RES_CATS.forEach(c => { resCatOn[c] = true; });
+      for (const r of reserves) {
+        if (!r.prov) continue;
+        (resByProv[r.prov] = resByProv[r.prov] || []).push(r);
+        if (r.lat != null && r.lon != null) {
+          (resLocatedByProv[r.prov] = resLocatedByProv[r.prov] || []).push(r);
+          resLocatedCount++;
+        }
+      }
+    }
     const displayName = n => {
       if (LANG === "en") { const s = findSpecies(n); return s ? (s.en_name || s.scientific || n) : n; }
       if (LANG === "zht") { const s = findSpecies(n); return s ? (s.wiki_title || n) : n; }
@@ -527,6 +615,24 @@
     const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     /* ==================== 单物种地图高亮 ==================== */
+    // 保护区散点数据：仅取含坐标且类型开关为开的条目；
+    // 处于物种高亮态时，非分布省份的点降透明度，形成"物种—保护区"联动
+    function buildReservePoints() {
+      if (!resLayerOn || !reserves.length) return [];
+      const provs = highlightSpecies ? highlightSpecies.provinces : null;
+      const pts = [];
+      for (const r of reserves) {
+        if (r.lat == null || r.lon == null) continue;
+        if (!resCatOn[r.cat]) continue;
+        const dim = provs && provs.indexOf(r.prov) === -1;
+        pts.push({
+          name: r.title || r.name, value: [r.lon, r.lat], res: r,
+          itemStyle: { color: RES_CAT_COLORS[r.cat] || RES_CAT_COLORS.other, opacity: dim ? 0.15 : 1 }
+        });
+      }
+      return pts;
+    }
+
     // 构建完整地图 option；withVmap=false 时不带 visualMap，
     // 避免其颜色映射在渲染层覆盖 itemStyle.areaColor（ECharts visualMap 优先级更高）
     function buildMapOption(withVmap) {
@@ -552,23 +658,56 @@
         tooltip: {
           trigger: "item", backgroundColor: "rgba(27,67,50,0.95)", borderColor: "#1b4332",
           padding: [8, 12], textStyle: { color: "#f6f3ec", fontSize: 12 },
-          formatter: p => "<strong>" + p.name + "</strong><br/>" +
-            (mapMode === "risk" ? t("mapTooltipRisk") + (riskCount[p.name] || 0) + " " + t("speciesUnit")
-                                : t("mapTooltipCount") + (countByProvince[p.name] || 0) + " " + t("speciesUnit"))
+          formatter: p => {
+            // 保护区散点与省份共用 tooltip，按 seriesType 分流
+            if (p.seriesType === "effectScatter") {
+              const r = p.data && p.data.res;
+              if (!r) return "";
+              const coord = r.lat != null ? r.lat.toFixed(4) + ", " + r.lon.toFixed(4) : t("resNoCoord");
+              return "<strong>" + esc(r.title || r.name) + "</strong><br/>" +
+                resCatName(r.cat) + " · " + provName(r.prov) + "<br/>" + coord;
+            }
+            let html = "<strong>" + p.name + "</strong><br/>" +
+              (mapMode === "risk" ? t("mapTooltipRisk") + (riskCount[p.name] || 0) + " " + t("speciesUnit")
+                                  : t("mapTooltipCount") + (countByProvince[p.name] || 0) + " " + t("speciesUnit"));
+            // 名录口径兜底：无坐标的保护区也计入省级统计
+            const rl = resByProv[p.name];
+            if (rl && rl.length) {
+              html += "<br/>" + t("resTooltipProv")
+                .replace("{total}", rl.length)
+                .replace("{located}", (resLocatedByProv[p.name] || []).length);
+            }
+            return html;
+          }
+        },
+        // geo 组件承担底图与漫游状态；map series 通过 geoIndex 绑定到它，
+        // effectScatter 必须依赖该 geo 才能定位保护区点位（与地图共享同一 zoom/center）
+        geo: {
+          map: "china", roam: true,
+          label: { show: true, color: cssVar("--map-label"), fontSize: 10 },
+          itemStyle: { areaColor: "transparent", borderColor: "transparent" },
+          emphasis: { disabled: true }
         },
         visualMap: withVmap ? {
           min: 0, max: maxV,
           left: 16, bottom: 16, orient: "vertical", itemWidth: 12, itemHeight: 90,
           text: range.text, textGap: 12, textStyle: { color: cssVar("--tx-3"), fontSize: 11 },
+          seriesIndex: 0, // 仅作用于 map series，否则会把保护区散点按数值重新染色
           inRange: { color: range.colors }
         } : undefined,
         series: [{
-          type: "map", map: "china", roam: true, selectedMode: false,
-          label: { show: true, color: cssVar("--map-label"), fontSize: 10 },
+          type: "map", geoIndex: 0, selectedMode: false,
           itemStyle: { borderColor: "#ffffff", borderWidth: 1, areaColor: cssVar("--map-muted") },
           emphasis: { label: { show: true, color: "#ffffff", fontWeight: "bold" },
             itemStyle: { areaColor: "#14532d", shadowBlur: 12, shadowColor: "rgba(0,0,0,0.25)" } },
           data
+        }, {
+          // 保护区脉冲点位：与地图共享 geo 坐标系（缩放/拖动自动同步）；
+          // 独立 zlevel 让其动画独占一层 canvas，避免整张地图每帧重绘
+          type: "effectScatter", coordinateSystem: "geo", geoIndex: 0,
+          zlevel: 3, symbolSize: 6,
+          rippleEffect: { brushType: "stroke", scale: 2.6, period: 4 },
+          data: buildReservePoints()
         }]
       };
     }
@@ -581,7 +720,7 @@
       const banner = document.getElementById("highlightBanner");
       if (highlightSpecies) {
         document.getElementById("highlightText").textContent =
-          "正在查看「" + displayName(highlightSpecies.name) + "」的分布省份（深色为分布区）";
+          t("highlightBannerText").replace("{name}", displayName(highlightSpecies.name));
         banner.classList.remove("hidden");
         banner.classList.add("flex");
       } else {
@@ -707,6 +846,7 @@
       document.getElementById("provinceName").textContent = provName(currentProvince);
       document.getElementById("provinceCount").textContent = total + (isRisk ? " " + t("riskUnit") : " " + t("provUnit"));
       renderProvPie();
+      renderProvReserves();
       // 更新提示文字
       document.querySelector("#tabList > [data-i18n=panelHint]").textContent = isRisk ? t("panelHintRisk") : t("panelHint");
       if (!total) {
@@ -720,6 +860,33 @@
     }
     function selectProvince(name) { currentProvince = name; renderPanel(); switchTab("list"); }
 
+    /* ==================== 本省国家级自然保护区（名录口径兜底） ==================== */
+    // 名录覆盖率 100%、坐标仅 38%，因此省份维度按名录全量展示，未定位的条目标注"未定位"
+    function renderProvReserves() {
+      const el = document.getElementById("provReserves");
+      const list = resByProv[currentProvince] || [];
+      if (!list.length) { el.classList.add("hidden"); el.innerHTML = ""; return; }
+      const located = (resLocatedByProv[currentProvince] || []).length;
+      el.classList.remove("hidden");
+      el.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-xs font-bold text-[var(--tx-head)]">${t("resPanelTitle")}</div>
+          <span class="text-[10.5px] text-[var(--tx-3)] whitespace-nowrap">${t("resPanelStat").replace("{located}", located).replace("{total}", list.length)}</span>
+        </div>
+        <div class="mt-2 flex flex-wrap gap-1.5">
+          ${list.map((r, i) => `<button data-ri="${i}" class="text-[11px] px-2.5 py-1 rounded-full border border-[var(--br)] bg-[var(--bg-card)] text-[var(--tx-2)] hover:border-[#c9dfc4] transition flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full shrink-0" style="background:${RES_CAT_COLORS[r.cat] || RES_CAT_COLORS.other}"></span>
+            <span class="max-w-[9rem] truncate">${esc(r.short || r.title || r.name)}</span>
+            ${r.lat == null ? `<span class="text-[9px] text-[var(--tx-3)]">${t("resNoCoordTag")}</span>` : ""}
+          </button>`).join("")}
+        </div>`;
+    }
+    document.getElementById("provReserves").addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-ri]"); if (!btn) return;
+      const r = (resByProv[currentProvince] || [])[+btn.dataset.ri];
+      if (r) openReserveDetail(r);
+    });
+
     /* 筛选 */
     document.getElementById("filterBar").addEventListener("click", function (e) {
       const btn = e.target.closest(".lv-chip"); if (!btn) return;
@@ -732,14 +899,18 @@
       renderPanel();
     });
 
-    /* 地图模式切换：物种数量 / 濒危热力 */
-    function setMapMode(mode) {
-      mapMode = mode;
+    /* 地图模式切换：物种数量 / 濒危热力（互斥）；自然保护区为独立开关 */
+    const MODE_BTN = { modeCountBtn: "count", modeRiskBtn: "risk" };
+    function paintModeBtns() {
       document.querySelectorAll(".map-mode-btn").forEach(b => {
-        const active = (b.id === "modeCountBtn") === (mode === "count");
+        const active = b.id === "modeReserveBtn" ? resLayerOn : MODE_BTN[b.id] === mapMode;
         b.className = "map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition " +
           (active ? "bg-[#1b4332] text-white" : "text-[var(--tx-2)] hover:bg-[var(--bg-hover)]");
       });
+    }
+    function setMapMode(mode) {
+      mapMode = mode;
+      paintModeBtns();
       if (highlightSpecies) clearHighlight();
       if (chart && geo) chart.setOption(buildMapOption(true), true);
       renderPanel();
@@ -747,6 +918,71 @@
     }
     document.getElementById("modeCountBtn").addEventListener("click", () => setMapMode("count"));
     document.getElementById("modeRiskBtn").addEventListener("click", () => setMapMode("risk"));
+
+    /* ==================== 保护区图层开关 + 类型图例 ==================== */
+    function setReserveLayer(on) {
+      resLayerOn = !!on && reserves.length > 0;
+      paintModeBtns();
+      renderResLegend();
+      if (chart) chart.setOption({ series: [{}, { data: buildReservePoints() }] });
+    }
+    function renderResLegend() {
+      const el = document.getElementById("resLegend");
+      if (!resLayerOn || !reserves.length) { el.classList.add("hidden"); el.innerHTML = ""; return; }
+      const counts = {};
+      for (const r of reserves) counts[r.cat] = (counts[r.cat] || 0) + 1;
+      el.innerHTML =
+        `<div class="px-1 pb-1.5 mb-1 border-b border-[var(--br)] text-[10.5px] font-bold text-[var(--tx-head)]">${t("resLegendTitle")}</div>` +
+        RES_CATS.map(c => `<button data-rescat="${c}" class="w-full flex items-center gap-1.5 px-1 py-1 rounded-lg hover:bg-[var(--bg-hover)] transition ${resCatOn[c] ? "" : "opacity-35"}">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${RES_CAT_COLORS[c]}"></span>
+            <span class="flex-1 min-w-0 text-left text-[10.5px] text-[var(--tx-2)] truncate">${resCatName(c)}</span>
+            <span class="text-[10px] text-[var(--tx-3)] tabular-nums">${counts[c] || 0}</span>
+          </button>`).join("") +
+        `<div class="mt-1 px-1 pt-1.5 border-t border-[var(--br)] text-[10px] leading-relaxed text-[var(--tx-3)]">${t("resLegendStat").replace("{located}", resLocatedCount).replace("{total}", reserves.length)}</div>`;
+      el.classList.remove("hidden");
+    }
+    document.getElementById("modeReserveBtn").addEventListener("click", () => setReserveLayer(!resLayerOn));
+    document.getElementById("resLegend").addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-rescat]"); if (!btn) return;
+      const c = btn.dataset.rescat;
+      resCatOn[c] = !resCatOn[c];
+      renderResLegend();
+      if (chart) chart.setOption({ series: [{}, { data: buildReservePoints() }] });
+    });
+
+    /* ==================== 保护区详情抽屉 ==================== */
+    function openReserveDetail(r) {
+      if (!r) return;
+      openReserveRec = r;
+      document.getElementById("categoryModal").classList.add("hidden");
+      document.getElementById("compareModal").classList.add("hidden");
+      document.getElementById("searchDropdown").classList.add("hidden");
+      document.getElementById("reserveDrawerBody").innerHTML = `
+        <div class="flex items-start gap-2">
+          <span class="mt-1.5 w-3 h-3 rounded-full shrink-0" style="background:${RES_CAT_COLORS[r.cat] || RES_CAT_COLORS.other}"></span>
+          <h3 class="text-lg font-bold leading-snug text-[var(--tx-head)]">${esc(r.title || r.name)}</h3>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <span class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-green-soft)] text-[var(--tx-green)]">${resCatName(r.cat)}</span>
+          <span class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-soft)] text-[var(--tx-2)]">${provName(r.prov)}</span>
+          <span class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--bg-soft)] text-[var(--tx-2)]">${regionName(r.region)}</span>
+        </div>
+        <dl class="mt-5 space-y-2.5 text-[12.5px]">
+          <div class="flex gap-3">
+            <dt class="w-20 shrink-0 text-[var(--tx-3)]">${t("resCoord")}</dt>
+            <dd class="tabular-nums text-[var(--tx-2)]">${r.lat != null ? r.lat.toFixed(4) + ", " + r.lon.toFixed(4) : t("resNoCoord")}</dd>
+          </div>
+          <div class="flex gap-3">
+            <dt class="w-20 shrink-0 text-[var(--tx-3)]">${t("resSource")}</dt>
+            <dd class="text-[var(--tx-2)]">${srcName(r.src)}</dd>
+          </div>
+        </dl>
+        <p class="mt-5 text-[10.5px] leading-relaxed text-[var(--tx-3)]">${t("resDrawerNote")}</p>`;
+      document.getElementById("reserveDrawer").classList.remove("hidden");
+    }
+    document.getElementById("reserveDrawer").addEventListener("click", function (e) {
+      if (e.target.closest("[data-close-reserve]")) this.classList.add("hidden");
+    });
 
     /* ==================== Tab 切换 + 统计图表 ==================== */
     let currentTab = "list";
@@ -985,7 +1221,7 @@
       const target = zoom <= ZOOM_HIDE ? false : (zoom >= ZOOM_SHOW ? true : labelShow);
       if (target !== labelShow) {
         labelShow = target;
-        chart.setOption({ series: [{ label: { show: labelShow } }] });
+        chart.setOption({ geo: [{ label: { show: labelShow } }] });
       }
     }
 
@@ -993,11 +1229,19 @@
       chart = echarts.init(document.getElementById("mapChart"));
       chart.setOption(buildMapOption(true));
       chart.on("click", function (params) {
-        if (params && params.name) { clearHighlight(); selectProvince(params.name); }
+        if (!params) return;
+        if (params.seriesType === "effectScatter") {
+          // 保护区点位：开详情抽屉，不切换省份
+          openReserveDetail(params.data && params.data.res);
+          return;
+        }
+        if (params.name) { clearHighlight(); selectProvince(params.name); }
       });
       chart.on("georoam", function () {
         // params.zoom 是单次缩放系数，需读取绝对缩放级别（默认 1，缩小后持续减小）
-        const zoom = chart.getOption().series[0].zoom;
+        // 引入 geo 组件后缩放状态由 geo 持有，series[0] 只是绑定到它的 map series
+        const opt = chart.getOption();
+        const zoom = opt.geo && opt.geo[0] ? opt.geo[0].zoom : undefined;
         if (typeof zoom === "number") syncLabelByZoom(zoom);
       });
     }
@@ -1012,8 +1256,10 @@
     function init() {
       Promise.all([
         fetch(GEO_URL).then(r => { if (!r.ok) throw new Error("geo"); return r.json(); }),
-        fetch(DATA_URL).then(r => { if (!r.ok) throw new Error("data"); return r.json(); })
-      ]).then(function ([geoJson, data]) {
+        fetch(DATA_URL).then(r => { if (!r.ok) throw new Error("data"); return r.json(); }),
+        // 保护区图层为可选增强：数据缺失/404 时静默降级，不影响主地图
+        fetch(RES_URL).then(r => r.ok ? r.json() : null).catch(() => null)
+      ]).then(function ([geoJson, data, resJson]) {
         geo = geoJson;
         document.getElementById("mapLoading").style.display = "none";
         document.getElementById("panelLoading").style.display = "none";
@@ -1024,6 +1270,7 @@
         applyI18nUI();
         paintLangBtns();
         buildIndex(species);
+        buildReserveIndex(resJson);
 
         const provCount = Object.keys(countByProvince).length;
         document.getElementById("navSub").textContent =
