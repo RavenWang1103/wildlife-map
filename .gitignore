@@ -16,3 +16,6 @@ venv/
 
 # 日志
 *.log
+
+# 数据采集中间缓存
+scripts/.reserves_cache/
