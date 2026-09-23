@@ -10,6 +10,11 @@
   4. OSM Overpass（boundary=protected_area / leisure=nature_reserve / protect_class）
   5. 高德地图 Web 服务 POI 关键字搜索（需环境变量 AMAP_KEY）        —— 坐标补齐
 
+保护区类型（cat）取自 data/rescat.json —— 生态环境部《全国自然保护区名录》的
+官方「类型」字段（由 scripts/fetch_rescat.py 生成）。查不到时才退回按名称正则猜。
+此外，官方「主要保护对象」含动物词的条目（如类型为内陆湿地但保护鸟类），
+也一并归入野生动物，以覆盖「湿地/森林型保护区实为野生动物保护区」的情况。
+
 用法：
   AMAP_KEY=你的key python3 scripts/fetch_reserves.py
 无 AMAP_KEY 时自动跳过第 5 步，仅用前 4 个源（覆盖率约 38%）。
@@ -17,6 +22,7 @@
 注意：高德返回 GCJ-02 坐标，与地图底图存在数百米级偏移；
 在省级比例尺下该偏移不可见，故不做坐标纠偏。
 """
+import difflib
 import json
 import os
 import re
@@ -27,6 +33,7 @@ import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'data', 'reserves.json')
+RESCAT = os.path.join(ROOT, 'data', 'rescat.json')
 CACHE = os.path.join(ROOT, 'scripts', '.reserves_cache')
 
 MINGLU_TITLE = '中华人民共和国国家级自然保护区列表'
@@ -134,6 +141,90 @@ def infer_cat(name):
         if re.search(pat, name):
             return cat
     return 'other'
+
+
+# ------------------------------------------------- 官方类型（生态环境部名录）
+
+# GB/T 14529-1993 九类类型 -> 地图图例 cat id
+OFFICIAL_TYPE = {
+    '森林生态': 'forest', '草原草甸': 'grassland', '荒漠生态': 'grassland',
+    '内陆湿地': 'wetland', '海洋海岸': 'marine', '野生植物': 'plant',
+    '野生动物': 'wildlife', '地质遗迹': 'geology', '古生物遗迹': 'geology',
+}
+
+# 「主要保护对象」中判定为动物的词（末类是停用词，见 STOP）
+ANIMAL_WORDS = [
+    '兽', '鹿', '猴', '猿', '熊猫', '虎', '豹', '猫', '熊', '象', '羚', '麝', '獐', '貂',
+    '牛', '马', '驴', '驼', '羊', '兔', '鼠', '蝠', '豚', '鲸', '海豹', '穿山甲',
+    '鸟', '鹤', '鹳', '鹮', '鸥', '雁', '鸭', '鹅', '雉', '鸡', '鹰', '雕', '隼', '鸮',
+    '鹭', '鹬', '鸻', '莺', '雀', '画眉', '蜂虎', '翠鸟', '燕',
+    '鱼', '鲟', '鲤', '鲵', '蛙', '蛇', '蜥', '龟', '鳖', '蟒', '鲈', '鳅', '鳝',
+    '蝶', '昆虫', '蚌', '螺', '珊瑚', '水母',
+]
+# 命中即排除：「北票鸟化石」等古生物遗迹条目，保护对象是化石而非活体动物
+STOP_WORDS = ['化石']
+
+_OFFICIAL = None
+
+
+def is_animal_object(text):
+    """官方「主要保护对象」是否以动物为主。"""
+    if not text or any(w in text for w in STOP_WORDS):
+        return False
+    return any(w in text for w in ANIMAL_WORDS)
+
+
+def load_official():
+    """加载 data/rescat.json，建「(省, 核心名) -> (官方类型, 是否以动物为保护对象)」索引。
+
+    维基名录与官方名录的名称写法有出入（如 大海坨 / 大海陀），
+    故除精确索引外再按省保留全量列表，供包含匹配与相似度匹配使用。
+    """
+    global _OFFICIAL
+    if _OFFICIAL is not None:
+        return _OFFICIAL
+    exact, by_prov = {}, {}
+    if os.path.exists(RESCAT):
+        with open(RESCAT, encoding='utf-8') as f:
+            data = json.load(f)
+        for r in data.get('reserves', []):
+            core = core_name(r['name']) or r['name']
+            cat = OFFICIAL_TYPE.get(r['type'])
+            if not core or not cat:
+                continue
+            entry = (cat, is_animal_object(r.get('object', '')))
+            exact.setdefault((r['prov'], core), entry)
+            by_prov.setdefault(r['prov'], []).append((core,) + entry)
+    _OFFICIAL = (exact, by_prov)
+    return _OFFICIAL
+
+
+def resolve_cat(name, prov):
+    """取保护区类型：优先官方类型，查不到才按名称正则猜。
+
+    递进三层：省 + 核心名精确 -> 同省内包含 -> 同省内相似度 >= 0.75。
+    保护对象含动物的，无论官方类型是什么，一律归入 wildlife。
+    """
+    exact, by_prov = load_official()
+    p = prov_full(prov)
+    core = core_name(name)
+    if core:
+        if (p, core) in exact:
+            return _pick(*exact[(p, core)])
+        cands = by_prov.get(p, [])
+        hits = [c for c in cands if c[0] in core or core in c[0]]
+        if hits:
+            return _pick(*max(hits, key=lambda x: len(x[0]))[1:])
+        best = max(cands, key=lambda x: difflib.SequenceMatcher(None, core, x[0]).ratio(),
+                   default=None)
+        if best and difflib.SequenceMatcher(None, core, best[0]).ratio() >= 0.75:
+            return _pick(best[1], best[2])
+    return infer_cat(name)
+
+
+def _pick(cat, animal):
+    """保护对象含动物 -> wildlife，否则用官方类型。"""
+    return 'wildlife' if animal else cat
 
 
 def cached(name, producer):
@@ -335,19 +426,29 @@ def _produce_osm():
 AMAP_TEXT = 'https://restapi.amap.com/v3/place/text'
 
 
+class QuotaExceeded(Exception):
+    """高德当日配额用尽。保留已得结果并落盘，下次运行自动续跑。"""
+
+
 def _amap_search(key, keyword, adcode):
-    d = api_json(AMAP_TEXT, {
-        'key': key, 'keywords': keyword, 'city': adcode, 'citylimit': 'true',
-        'offset': 10, 'page': 1, 'extensions': 'base',
-    }, retries=3)
-    if not d or d.get('status') != '1':
+    for _ in range(3):
+        d = api_json(AMAP_TEXT, {
+            'key': key, 'keywords': keyword, 'city': adcode, 'citylimit': 'true',
+            'offset': 10, 'page': 1, 'extensions': 'base',
+        }, retries=3)
+        if d and d.get('status') == '1':
+            return d.get('pois') or []
         info = (d or {}).get('info', 'unknown')
         if info in ('INVALID_USER_KEY', 'USERKEY_PLAT_NOMATCH', 'INVALID_USER_SCODE'):
             raise SystemExit(f'高德 Key 无效或平台类型不符（{info}），请确认选的是「Web服务」Key')
-        if info == 'DAILY_QUERY_OVER_LIMIT':
-            raise SystemExit('高德 Key 今日配额已用尽，请明天再跑或换 Key')
+        if info in ('DAILY_QUERY_OVER_LIMIT', 'ABROAD_DAILY_QUERY_OVER_LIMIT'):
+            raise QuotaExceeded(f'高德今日配额已用尽（{info}）')
+        if info == 'CUQPS_HAS_EXCEEDED_THE_LIMIT':
+            time.sleep(1.0)
+            continue
+        print(f'    ! 高德返回 {info}，跳过关键词「{keyword}」', file=sys.stderr)
         return None
-    return d.get('pois') or []
+    return None
 
 
 def _poi_ok(core, poi_name):
@@ -369,25 +470,29 @@ def _produce_amap(items, key, need_titles):
         adcode = PROV_ADCODE.get(norm_prov(it['prov']))
         if not core or not adcode:
             continue
-        for keyword in (core, core + '自然保护区', it['name']):
-            pois = _amap_search(key, keyword, adcode)
-            hit = None
-            for poi in pois:
-                loc = (poi.get('location') or '').split(',')
-                if len(loc) != 2:
-                    continue
-                if _poi_ok(core, poi.get('name') or ''):
-                    hit = {
-                        'lat': float(loc[1]), 'lon': float(loc[0]),
-                        'poi': poi.get('name'), 'addr': poi.get('adname') or '',
-                    }
+        try:
+            for keyword in (core, core + '自然保护区', it['name']):
+                pois = _amap_search(key, keyword, adcode)
+                hit = None
+                for poi in (pois or []):
+                    loc = (poi.get('location') or '').split(',')
+                    if len(loc) != 2:
+                        continue
+                    if _poi_ok(core, poi.get('name') or ''):
+                        hit = {
+                            'lat': float(loc[1]), 'lon': float(loc[0]),
+                            'poi': poi.get('name'), 'addr': poi.get('adname') or '',
+                        }
+                        break
+                if hit:
+                    out[it['title']] = hit
                     break
-            if hit:
-                out[it['title']] = hit
-                break
+        except QuotaExceeded as e:
+            print(f'  ! {e}，本轮已命中 {len(out)}/{len(todo)} 条，结果已缓存，可次日续跑')
+            return out
         if idx % 20 == 0:
             print(f'  高德 {idx}/{len(todo)} -> 命中 {len(out)}')
-        time.sleep(0.15)
+        time.sleep(0.4)
     print(f'  高德命中 {len(out)}/{len(todo)}')
     return out
 
@@ -448,7 +553,7 @@ def main():
             'short': core_name(it['name']) or it['name'],
             'prov': prov_full(it['prov']),
             'region': it['region'],
-            'cat': infer_cat(it['name']),
+            'cat': resolve_cat(it['name'], it['prov']),
             'lat': round(coord[0], 5) if coord else None,
             'lon': round(coord[1], 5) if coord else None,
             'src': src,

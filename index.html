@@ -474,8 +474,11 @@
     let mapMode = "count";               // 地图模式：count 物种数量 / risk 濒危热力
     let compareList = [];                // 对比列表（最多 2 个）
     let reserves = [], resByProv = {}, resLocatedByProv = {}, resLocatedCount = 0;
+    let provResList = [];                // 当前省份已渲染的名录（已按类型开关过滤），供点击取用
     let resLayerOn = false;              // 保护区图层开关
     let resCatOn = {};                   // 保护区类型逐类开关（8 类）
+    // 类型开关是否放行某条保护区：地图散点与省份名录共用同一口径
+    const resCatVisible = r => !!resCatOn[r.cat];
     let openReserveRec = null;           // 当前打开的保护区（用于切换语言时重渲染）
 
     /* ==================== 主题（深色模式） ==================== */
@@ -595,7 +598,8 @@
     function buildReserveIndex(resJson) {
       reserves = (resJson && Array.isArray(resJson.reserves)) ? resJson.reserves : [];
       resByProv = {}; resLocatedByProv = {}; resLocatedCount = 0;
-      RES_CATS.forEach(c => { resCatOn[c] = true; });
+      // 默认只勾选「野生动物」；其余 7 类在图例中保留但默认关闭
+      RES_CATS.forEach(c => { resCatOn[c] = (c === "wildlife"); });
       for (const r of reserves) {
         if (!r.prov) continue;
         (resByProv[r.prov] = resByProv[r.prov] || []).push(r);
@@ -615,6 +619,10 @@
     const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
     /* ==================== 单物种地图高亮 ==================== */
+    // 保护区点位半径：以 zoom=1 时的 6px 为基准，随缩放同步放大/缩小，并设上下限防止过小/过大
+    const RES_SYMBOL_BASE = 6, RES_SYMBOL_MIN = 2.5, RES_SYMBOL_MAX = 22;
+    let resSymbolSize = RES_SYMBOL_BASE;
+
     // 保护区散点数据：仅取含坐标且类型开关为开的条目；
     // 处于物种高亮态时，非分布省份的点降透明度，形成"物种—保护区"联动
     function buildReservePoints() {
@@ -623,7 +631,7 @@
       const pts = [];
       for (const r of reserves) {
         if (r.lat == null || r.lon == null) continue;
-        if (!resCatOn[r.cat]) continue;
+        if (!resCatVisible(r)) continue;
         const dim = provs && provs.indexOf(r.prov) === -1;
         pts.push({
           name: r.title || r.name, value: [r.lon, r.lat], res: r,
@@ -670,12 +678,12 @@
             let html = "<strong>" + p.name + "</strong><br/>" +
               (mapMode === "risk" ? t("mapTooltipRisk") + (riskCount[p.name] || 0) + " " + t("speciesUnit")
                                   : t("mapTooltipCount") + (countByProvince[p.name] || 0) + " " + t("speciesUnit"));
-            // 名录口径兜底：无坐标的保护区也计入省级统计
-            const rl = resByProv[p.name];
-            if (rl && rl.length) {
+            // 名录口径兜底：无坐标的保护区也计入省级统计（与名录同样受类型开关过滤）
+            const rl = (resByProv[p.name] || []).filter(resCatVisible);
+            if (rl.length) {
               html += "<br/>" + t("resTooltipProv")
                 .replace("{total}", rl.length)
-                .replace("{located}", (resLocatedByProv[p.name] || []).length);
+                .replace("{located}", rl.filter(x => x.lat != null && x.lon != null).length);
             }
             return html;
           }
@@ -684,6 +692,8 @@
         // effectScatter 必须依赖该 geo 才能定位保护区点位（与地图共享同一 zoom/center）
         geo: {
           map: "china", roam: true,
+          // 缩放下限：0.85 是「点位与底图开始视觉分离」的临界点，到此锁死不再缩小
+          scaleLimit: { min: ZOOM_MIN },
           label: { show: true, color: cssVar("--map-label"), fontSize: 10 },
           itemStyle: { areaColor: "transparent", borderColor: "transparent" },
           emphasis: { disabled: true }
@@ -702,10 +712,13 @@
             itemStyle: { areaColor: "#14532d", shadowBlur: 12, shadowColor: "rgba(0,0,0,0.25)" } },
           data
         }, {
-          // 保护区脉冲点位：与地图共享 geo 坐标系（缩放/拖动自动同步）；
-          // 独立 zlevel 让其动画独占一层 canvas，避免整张地图每帧重绘
+          // 保护区脉冲点位：与地图共享 geo 坐标系（缩放/拖动自动同步）。
+          // 此处不设 zlevel —— 独立 zlevel 会拆成另一张 canvas，roam 时两层刷新时序不一致，
+          // 表现为「地图动了、点跟在后面」的滞后；同层绘制则与底图严格同帧。
           type: "effectScatter", coordinateSystem: "geo", geoIndex: 0,
-          zlevel: 3, symbolSize: 6,
+          // 固定用基准尺寸建点，放大缩小改在 georoam 里直接缩放图元（见 syncResSymbolByZoom）；
+          // 这样漫游过程中不再触发 setOption，点位与底图同帧跟上，不会滞后
+          symbolSize: RES_SYMBOL_BASE,
           rippleEffect: { brushType: "stroke", scale: 2.6, period: 4 },
           data: buildReservePoints()
         }]
@@ -714,9 +727,11 @@
 
     function applyHighlight() {
       if (!chart || !geo) return;
+      // notMerge 重建会重置 geo 的 zoom，故标签显隐与点位尺寸一并复位
+      labelShow = true;
+      resSymbolSize = RES_SYMBOL_BASE;
       // notMerge 重建，高亮时移除 visualMap 使双色 itemStyle 生效
       chart.setOption(buildMapOption(!highlightSpecies), true);
-      labelShow = true; // 视图回到默认缩放，标签恢复显示
       const banner = document.getElementById("highlightBanner");
       if (highlightSpecies) {
         document.getElementById("highlightText").textContent =
@@ -861,12 +876,13 @@
     function selectProvince(name) { currentProvince = name; renderPanel(); switchTab("list"); }
 
     /* ==================== 本省国家级自然保护区（名录口径兜底） ==================== */
-    // 名录覆盖率 100%、坐标仅 38%，因此省份维度按名录全量展示，未定位的条目标注"未定位"
+    // 名录覆盖率 100%、坐标仅 38%，因此省份维度按名录展示、未定位的条目标注"未定位"；
+    // 名录与地图散点共用类型开关，只列当前已勾选的类型
     function renderProvReserves() {
       const el = document.getElementById("provReserves");
-      const list = resByProv[currentProvince] || [];
+      const list = provResList = (resByProv[currentProvince] || []).filter(resCatVisible);
       if (!list.length) { el.classList.add("hidden"); el.innerHTML = ""; return; }
-      const located = (resLocatedByProv[currentProvince] || []).length;
+      const located = list.filter(r => r.lat != null && r.lon != null).length;
       el.classList.remove("hidden");
       el.innerHTML = `
         <div class="flex items-center justify-between gap-2">
@@ -883,7 +899,7 @@
     }
     document.getElementById("provReserves").addEventListener("click", function (e) {
       const btn = e.target.closest("[data-ri]"); if (!btn) return;
-      const r = (resByProv[currentProvince] || [])[+btn.dataset.ri];
+      const r = provResList[+btn.dataset.ri];
       if (r) openReserveDetail(r);
     });
 
@@ -912,9 +928,10 @@
       mapMode = mode;
       paintModeBtns();
       if (highlightSpecies) clearHighlight();
+      labelShow = true; // notMerge 重建会重置 geo 的 zoom，标签与点位尺寸一并复位
+      resSymbolSize = RES_SYMBOL_BASE;
       if (chart && geo) chart.setOption(buildMapOption(true), true);
       renderPanel();
-      labelShow = true; // 视图回到默认缩放，标签恢复显示
     }
     document.getElementById("modeCountBtn").addEventListener("click", () => setMapMode("count"));
     document.getElementById("modeRiskBtn").addEventListener("click", () => setMapMode("risk"));
@@ -924,7 +941,11 @@
       resLayerOn = !!on && reserves.length > 0;
       paintModeBtns();
       renderResLegend();
-      if (chart) chart.setOption({ series: [{}, { data: buildReservePoints() }] });
+      if (chart) {
+        chart.setOption({ series: [{}, { data: buildReservePoints() }] });
+        // 重建图元会把缩放还原成 1，按当前 zoom 对应的尺寸补一次
+        scaleResSymbols(resSymbolSize / RES_SYMBOL_BASE);
+      }
     }
     function renderResLegend() {
       const el = document.getElementById("resLegend");
@@ -947,6 +968,7 @@
       const c = btn.dataset.rescat;
       resCatOn[c] = !resCatOn[c];
       renderResLegend();
+      renderProvReserves();
       if (chart) chart.setOption({ series: [{}, { data: buildReservePoints() }] });
     });
 
@@ -1214,14 +1236,43 @@
     });
 
     /* ==================== ECharts 地图 ==================== */
-    // 缩放阈值：缩小到一定程度后隐藏省份名（文字过小/重叠时更美观，带迟滞防抖）
-    const ZOOM_HIDE = 0.85, ZOOM_SHOW = 1.0;
+    // 缩放下限：0.85 即「点位与底图开始视觉分离」的临界点，滚轮到此不再生效
+    const ZOOM_MIN = 0.85;
+    // 缩放阈值：缩小到一定程度后隐藏省份名（带迟滞防抖）。
+    // 注意须低于 ZOOM_MIN，否则缩到下限时会长期隐去省份名
+    const ZOOM_HIDE = 0.8, ZOOM_SHOW = 1.0;
     let labelShow = true;
     function syncLabelByZoom(zoom) {
       const target = zoom <= ZOOM_HIDE ? false : (zoom >= ZOOM_SHOW ? true : labelShow);
       if (target !== labelShow) {
         labelShow = target;
         chart.setOption({ geo: [{ label: { show: labelShow } }] });
+      }
+    }
+
+    // 点位大小随缩放走：取 zoom 的 0.7 次幂（放大时增长慢于地图，避免点位糊住地图），
+    // 量化到 0.5px 一级以减少重复计算。
+    // 关键：漫游中不能调 setOption（实测单帧开销会放大近 10 倍，点位因此晚一拍跟上），
+    // 改为直接对散点图元做等比缩放；比例按「目标尺寸 / 基准尺寸」绝对赋值，
+    // 图元被重建后再次应用也能回到正确尺寸，不会层层累积。
+    function syncResSymbolByZoom(zoom) {
+      if (!chart) return;
+      const raw = RES_SYMBOL_BASE * Math.pow(zoom, 0.7);
+      const next = Math.min(RES_SYMBOL_MAX, Math.max(RES_SYMBOL_MIN,
+        Math.round(raw * 2) / 2));
+      if (next === resSymbolSize) return;
+      resSymbolSize = next;
+      scaleResSymbols(next / RES_SYMBOL_BASE);
+    }
+    // 对保护区散点（series[1]）的图元等比缩放，保持点位位置不变
+    function scaleResSymbols(k) {
+      if (!chart) return;
+      const sm = chart.getModel().getSeriesByIndex(1);
+      if (!sm) return;
+      const d = sm.getData();
+      for (let i = 0; i < d.count(); i++) {
+        const el = d.getItemGraphicEl(i);
+        if (el) el.attr({ scaleX: k, scaleY: k });
       }
     }
 
@@ -1243,6 +1294,7 @@
         const opt = chart.getOption();
         const zoom = opt.geo && opt.geo[0] ? opt.geo[0].zoom : undefined;
         if (typeof zoom === "number") syncLabelByZoom(zoom);
+        if (typeof zoom === "number") syncResSymbolByZoom(zoom);
       });
     }
 
