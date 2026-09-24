@@ -44,6 +44,66 @@
     .img-wrap { background: radial-gradient(circle at 30% 30%, #dce8d2 0%, #eef4e6 45%, #e2e9d9 100%); }
     html.dark .img-wrap { background: radial-gradient(circle at 30% 30%, #22332a 0%, #2b3d30 45%, #223028 100%); }
     .img-wrap img { position: relative; z-index: 1; }
+
+    /* 自然工具库：独立样式，无需重新构建 Tailwind。 */
+    #toolsBtn { color:var(--tx-green); background:var(--bg-green-soft); border:0; border-radius:999px; padding:4px 10px; font-size:11px; font-weight:600; white-space:nowrap; cursor:pointer; }
+    #toolsBtn:hover { background:var(--bg-green-soft2); }
+    #toolsDialog { width:min(1040px,calc(100% - 24px)); max-height:calc(100dvh - 32px); padding:0; border:1px solid var(--br); border-radius:24px; background:var(--bg-panel); color:var(--tx); margin:auto; box-shadow:0 24px 80px #0004; }
+    #toolsDialog::backdrop { background:rgba(10,25,17,.55); backdrop-filter:blur(4px); }
+    .tools-header { padding:28px 28px 20px; border-bottom:1px solid var(--br); }
+    .tools-top { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+    .tools-eyebrow { color:var(--tx-green-2); font-size:11px; letter-spacing:2px; margin:0 0 6px; }
+    #toolsTitle { font-size:26px; font-weight:700; color:var(--tx-head); margin:0; }
+    .tools-intro { font-size:13px; color:var(--tx-2); margin:8px 0 20px; line-height:1.7; }
+    #toolsClose { border:1px solid var(--br); background:var(--bg-card); color:var(--tx-2); border-radius:50%; width:36px; height:36px; font-size:22px; cursor:pointer; flex-shrink:0; }
+    #toolsSearch { display:block; width:100%; box-sizing:border-box; border:1px solid var(--br); border-radius:12px; padding:12px 14px; background:var(--bg-card); color:var(--tx); font-size:14px; }
+    #toolsFilters { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+    #toolsFilters button { border:1px solid var(--br); border-radius:999px; padding:6px 12px; background:var(--bg-card); color:var(--tx-2); font-size:12px; cursor:pointer; }
+    #toolsFilters button[aria-pressed="true"] { color:#fff; background:#2d6a4f; border-color:#2d6a4f; }
+    .tools-content { padding:20px 28px 28px; }
+    #toolsCount { margin-bottom:12px; font-size:12px; color:var(--tx-3); }
+    #toolsGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .tool-card { display:flex; flex-direction:column; padding:20px; border:1px solid var(--br); border-radius:16px; background:var(--bg-card); }
+    .tool-category { font-size:11px; color:var(--tx-green-2); margin-bottom:12px; }
+    .tool-card h3 { font-size:17px; font-weight:700; color:var(--tx-head); margin:0 0 9px; }
+    .tool-card p { font-size:13px; line-height:1.8; color:var(--tx-2); margin:0 0 20px; flex:1; }
+    .tool-card a { display:flex; justify-content:space-between; align-items:center; gap:8px; padding-top:12px; border-top:1px solid var(--br-2); color:var(--tx-green); text-decoration:none; font-size:12px; font-weight:600; }
+    .tool-card a:hover { text-decoration:underline; }
+    #toolsEmpty { padding:36px 0; text-align:center; color:var(--tx-2); font-size:14px; }
+    #toolsDialog :focus-visible, #toolsBtn:focus-visible { outline:2px solid var(--tx-green); outline-offset:3px; }
+    @media(max-width:760px) { #toolsGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:520px) { #toolsGrid { grid-template-columns:1fr; } .tools-header { padding:20px 18px 16px; } .tools-content { padding:16px 18px 20px; } #toolsTitle { font-size:23px; } #modeCountBtn,#modeRiskBtn,#modeReserveBtn { padding-left:8px; padding-right:8px; } }
+
+    #mapActions { max-width:calc(100% - 24px); overflow-x:auto; scrollbar-width:thin; }
+    #mapActions > button { flex-shrink:0; white-space:nowrap; }
+    #opportunitiesBtn { color:var(--tx-green); background:var(--bg-green-soft); border:0; border-radius:999px; padding:4px 10px; font-size:11px; font-weight:600; cursor:pointer; }
+    #opportunitiesBtn:hover { background:var(--bg-green-soft2); }
+    #opportunitiesDialog { width:min(1040px,calc(100% - 24px)); max-height:calc(100dvh - 32px); padding:0; border:1px solid var(--br); border-radius:24px; background:var(--bg-panel); color:var(--tx); margin:auto; box-shadow:0 24px 80px #0004; }
+    #opportunitiesDialog::backdrop { background:rgba(10,25,17,.55); backdrop-filter:blur(4px); }
+    #opportunitiesTitle { font-size:26px; font-weight:700; color:var(--tx-head); margin:0; }
+    #opportunitiesClose { border:1px solid var(--br); background:var(--bg-card); color:var(--tx-2); border-radius:50%; width:36px; height:36px; font-size:22px; cursor:pointer; flex-shrink:0; }
+    .opportunities-paths { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 20px; }
+    .opportunities-paths a { border:1px solid var(--br); border-radius:14px; padding:16px; text-decoration:none; color:var(--tx-head); background:var(--bg-green-soft); }
+    .opportunities-paths a:last-child { background:var(--bg-amber-soft); }
+    .opportunities-paths strong { display:block; font-size:15px; margin-bottom:6px; }
+    .opportunities-paths span { font-size:12px; line-height:1.7; color:var(--tx-2); }
+    .opportunities-search { display:flex; gap:10px; }
+    #opportunitiesSearch,#opportunitiesRegion { border:1px solid var(--br); border-radius:12px; padding:11px 12px; background:var(--bg-card); color:var(--tx); font-size:13px; min-width:0; }
+    #opportunitiesSearch { flex:1; width:100%; }
+    #opportunitiesFilters { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+    #opportunitiesFilters button { border:1px solid var(--br); border-radius:999px; padding:6px 12px; background:var(--bg-card); color:var(--tx-2); font-size:12px; cursor:pointer; }
+    #opportunitiesFilters button[aria-pressed="true"] { color:#fff; background:#2d6a4f; border-color:#2d6a4f; }
+    #opportunitiesCount,.opportunities-note { font-size:12px; line-height:1.8; color:var(--tx-2); margin:0 0 14px; }
+    #opportunitiesGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .opportunity-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; font-size:11px; color:var(--tx-green-2); }
+    .opportunity-meta span { padding:3px 8px; border-radius:6px; background:var(--bg-green-soft); }
+    .opportunity-org { font-size:12px; color:var(--tx-3); margin-bottom:9px; }
+    .opportunity-status { font-size:11px; color:var(--tx-3); margin-bottom:12px; }
+    #opportunitiesEmpty { padding:30px 0; text-align:center; color:var(--tx-2); font-size:14px; }
+    .opportunities-footer { margin:22px 0 0; padding-top:16px; border-top:1px solid var(--br); font-size:11px; color:var(--tx-3); line-height:1.8; }
+    .opportunities-footer a { color:var(--tx-green); text-decoration:underline; }
+    #opportunitiesDialog :focus-visible,#opportunitiesBtn:focus-visible { outline:2px solid var(--tx-green); outline-offset:3px; }
+    @media(max-width:520px) { #mapActions > button { padding-left:6px; padding-right:6px; font-size:10px; } #opportunitiesTitle { font-size:23px; } #opportunitiesGrid,.opportunities-paths { grid-template-columns:1fr; } .opportunities-search { flex-direction:column; } }
   </style>
 </head>
 <body class="bg-[var(--bg)] text-[var(--tx)] lg:overflow-hidden">
@@ -118,10 +178,12 @@
       <div id="mapChart"></div>
 
       <!-- 地图模式切换（物种数量 / 濒危物种 / 自然保护区） -->
-      <div class="absolute top-3 left-3 z-20 flex items-center gap-1 bg-[var(--bg-card)]/90 backdrop-blur rounded-full p-1 shadow border border-[var(--br)]">
+      <div id="mapActions" class="absolute top-3 left-3 z-20 flex items-center gap-1 bg-[var(--bg-card)]/90 backdrop-blur rounded-full p-1 shadow border border-[var(--br)]">
         <button id="modeCountBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeCount">物种数量</button>
         <button id="modeRiskBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeRisk">濒危热力</button>
         <button id="modeReserveBtn" class="map-mode-btn text-[11px] font-medium px-3 py-1 rounded-full transition" data-i18n="modeReserve">自然保护区</button>
+        <button id="opportunitiesBtn" type="button" aria-haspopup="dialog" aria-controls="opportunitiesDialog">机会</button>
+        <button id="toolsBtn" type="button" aria-haspopup="dialog" aria-controls="toolsDialog">自然工具库</button>
       </div>
 
       <!-- 保护区类型图例：开启图层后出现，可逐类开关 -->
@@ -1343,5 +1405,261 @@
     }
     document.addEventListener("DOMContentLoaded", init);
   </script>
+
+  <dialog id="toolsDialog" aria-labelledby="toolsTitle" aria-describedby="toolsIntro">
+    <div class="tools-header">
+      <div class="tools-top"><div><p class="tools-eyebrow">NATURE TOOLKIT</p><h2 id="toolsTitle">自然工具库</h2></div><button id="toolsClose" type="button" aria-label="关闭自然工具库">×</button></div>
+      <p id="toolsIntro" class="tools-intro">从认识一种动物，到查找分布与保护资料，找到顺手的自然探索工具。</p>
+      <input id="toolsSearch" type="search" placeholder="搜索工具或用途，例如：鸟类、地图、照片" aria-label="搜索工具或用途" autocomplete="off">
+      <div id="toolsFilters" role="group" aria-label="工具分类"></div>
+    </div>
+    <div class="tools-content"><p id="toolsCount" role="status" aria-live="polite"></p><div id="toolsGrid"></div><p id="toolsEmpty" hidden>没有找到相关工具，试试其他关键词或分类。</p></div>
+  </dialog>
+  <script>
+  (() => {
+    const tools = [
+  {
+    "name": "iNaturalist",
+    "category": "识别与记录",
+    "description": "上传动植物照片，获取识别建议，并保存自己的自然观察记录。",
+    "url": "https://www.inaturalist.org/"
+  },
+  {
+    "name": "Merlin Bird ID",
+    "category": "识别与记录",
+    "description": "通过照片、声音或特征问答辅助识别鸟类，适合观鸟入门。",
+    "url": "https://www.merlinbirds.org/"
+  },
+  {
+    "name": "eBird",
+    "category": "识别与记录",
+    "description": "记录观鸟清单，探索各地鸟类的观察记录和观鸟热点。",
+    "url": "https://ebird.org/home"
+  },
+  {
+    "name": "GBIF",
+    "category": "分布与数据",
+    "description": "查询全球物种出现记录，获取带时间、地点和来源的生物多样性数据。",
+    "url": "https://www.gbif.org/occurrence/search"
+  },
+  {
+    "name": "Protected Planet",
+    "category": "分布与数据",
+    "description": "查询全球保护地及其他有效区域保护措施的信息与空间分布。",
+    "url": "https://www.protectedplanet.net/en"
+  },
+  {
+    "name": "QGIS",
+    "category": "地图制作",
+    "description": "免费开源的地理信息软件，用于制作地图、处理边界和分析物种分布。",
+    "url": "https://qgis.org/"
+  },
+  {
+    "name": "IUCN Red List",
+    "category": "保护状态",
+    "description": "查询物种的全球灭绝风险评估，了解濒危等级和评估资料。",
+    "url": "https://www.iucnredlist.org/"
+  },
+  {
+    "name": "Macaulay Library",
+    "category": "影像与声音",
+    "description": "检索鸟类及其他动物的照片、声音和视频，辅助学习和识别。",
+    "url": "https://www.macaulaylibrary.org/"
+  },
+  {
+    "name": "Wildlife Insights",
+    "category": "科研监测",
+    "description": "管理红外相机影像，利用 AI 辅助识别动物并整理监测数据。",
+    "url": "https://www.wildlifeinsights.org/"
+  }
+];
+    const dialog = document.getElementById('toolsDialog');
+    const search = document.getElementById('toolsSearch');
+    const filters = document.getElementById('toolsFilters');
+    const grid = document.getElementById('toolsGrid');
+    let category = '全部';
+    const categories = ['全部', ...new Set(tools.map(tool => tool.category))];
+    categories.forEach(name => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.textContent = name;
+      button.setAttribute('aria-pressed', String(name === category));
+      button.addEventListener('click', () => {
+        category = name;
+        [...filters.children].forEach(b => b.setAttribute('aria-pressed', String(b.textContent === category)));
+        render();
+      });
+      filters.append(button);
+    });
+    function render() {
+      const keyword = search.value.trim().toLocaleLowerCase();
+      const matches = tools.filter(tool => (category === '全部' || tool.category === category) &&
+        [tool.name, tool.category, tool.description].join(' ').toLocaleLowerCase().includes(keyword));
+      grid.replaceChildren();
+      matches.forEach(tool => {
+        const card = document.createElement('article'); card.className = 'tool-card';
+        const tag = document.createElement('span'); tag.className = 'tool-category'; tag.textContent = tool.category;
+        const title = document.createElement('h3'); title.textContent = tool.name;
+        const description = document.createElement('p'); description.textContent = tool.description;
+        const link = document.createElement('a'); link.href = tool.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        link.setAttribute('aria-label', '访问 ' + tool.name + ' 官网（新标签页）');
+        const label = document.createElement('span'); label.textContent = '访问官网';
+        const arrow = document.createElement('span'); arrow.textContent = '↗'; arrow.setAttribute('aria-hidden', 'true');
+        link.append(label, arrow); card.append(tag, title, description, link); grid.append(card);
+      });
+      document.getElementById('toolsCount').textContent = '显示 ' + matches.length + ' / ' + tools.length + ' 个工具 · 官网链接在新标签页打开';
+      document.getElementById('toolsEmpty').hidden = matches.length > 0;
+    }
+    document.getElementById('toolsBtn').addEventListener('click', () => { dialog.showModal(); search.focus(); });
+    document.getElementById('toolsClose').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => {
+      const rect = dialog.getBoundingClientRect();
+      if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();
+    });
+    search.addEventListener('input', render);
+    render();
+  })();
+  </script>
+
+
+  <dialog id="opportunitiesDialog" aria-labelledby="opportunitiesTitle" aria-describedby="opportunitiesIntro">
+    <div class="tools-header">
+      <div class="tools-top"><div><p class="tools-eyebrow">TAKE PART IN CONSERVATION</p><h2 id="opportunitiesTitle">自然保护机会</h2></div><button id="opportunitiesClose" type="button" aria-label="关闭自然保护机会">×</button></div>
+      <p id="opportunitiesIntro" class="tools-intro">从一次志愿服务到一份保护工作，找到参与自然保护的下一步。</p>
+      <div class="opportunities-paths">
+        <a href="https://shanyuchao.com/community/opportunities" target="_blank" rel="noopener noreferrer"><strong>发现更多机会 ↗</strong><span>前往山与潮，浏览实习、志愿与项目线索。</span></a>
+        <a href="https://shanyuchao.com/community/opportunities?status=review" target="_blank" rel="noopener noreferrer"><strong>看看往期经验 ↗</strong><span>阅读山与潮收录的参与者反馈，了解实际工作与生活。</span></a>
+      </div>
+      <div class="opportunities-search"><input id="opportunitiesSearch" type="search" aria-label="搜索机会、机构或地点" placeholder="搜索机会、机构或地点" autocomplete="off"><select id="opportunitiesRegion" aria-label="筛选机会地区"><option value="全部">全部地区</option><option value="国内">国内</option><option value="国际">国际</option></select></div>
+      <div id="opportunitiesFilters" role="group" aria-label="机会参与方式"></div>
+    </div>
+    <div class="tools-content">
+      <p class="opportunities-note">以下为机构招募栏目；具体开放岗位、截止时间和参与条件以来源页面为准。</p>
+      <p id="opportunitiesCount" role="status" aria-live="polite"></p><div id="opportunitiesGrid"></div>
+      <p id="opportunitiesEmpty" hidden>没有找到匹配的机会入口，试试其他关键词、参与方式或地区。</p>
+      <p class="opportunities-footer">入口整理于 2026-09-24 · 非实时岗位列表<br>机构简介依据各官网公开信息整理；机会与经验聚合入口来自 <a href="https://shanyuchao.com/community" target="_blank" rel="noopener noreferrer">山与潮</a>。</p>
+    </div>
+  </dialog>
+  <script>
+  (() => {
+    const opportunities = [
+  {
+    "title": "湿地保护志愿者",
+    "org": "红树林基金会 MCF",
+    "types": [
+      "志愿者"
+    ],
+    "region": "国内",
+    "place": "广东 · 深圳",
+    "description": "通过年度志愿者招募与培训计划，了解参与湿地保护的方式和报名安排。",
+    "url": "https://www.mcf.org.cn/volunteer.html"
+  },
+  {
+    "title": "山水保护实践与招募",
+    "org": "山水自然保护中心",
+    "types": [
+      "志愿者",
+      "实习",
+      "全职"
+    ],
+    "region": "国内",
+    "place": "国内 · 地点依项目",
+    "description": "关注自然保护、社区工作与生态监测相关招募，查看各期岗位的具体要求。",
+    "url": "https://www.shanshui.org/join/"
+  },
+  {
+    "title": "鸟类与栖息地保护岗位",
+    "org": "BirdLife International",
+    "types": [
+      "全职"
+    ],
+    "region": "国际",
+    "place": "国际 · 地点依岗位",
+    "description": "探索鸟类保护网络的职业机会，了解不同地区团队的岗位与工作方向。",
+    "url": "https://www.birdlife.org/careers-hub/"
+  },
+  {
+    "title": "野生动植物贸易保护工作",
+    "org": "TRAFFIC",
+    "types": [
+      "全职",
+      "志愿者"
+    ],
+    "region": "国际",
+    "place": "国际 · 地点依岗位",
+    "description": "查看野生动植物贸易、研究及保护相关的职业与志愿机会。",
+    "url": "https://www.traffic.org/about-us/careers/"
+  },
+  {
+    "title": "保护项目与资助入口",
+    "org": "IUCN 国际自然保护联盟",
+    "types": [
+      "项目与资助"
+    ],
+    "region": "国际",
+    "place": "国际 · 资格依项目",
+    "description": "了解保护项目资助和专业参与渠道，按自身背景寻找合适的参与方式。",
+    "url": "https://iucn.org/get-involved"
+  },
+  {
+    "title": "自然保护职业机会",
+    "org": "WWF 美国",
+    "types": [
+      "全职"
+    ],
+    "region": "国际",
+    "place": "美国 · 地点依岗位",
+    "description": "浏览 WWF 美国的职业入口，了解保护机构的团队工作及招聘要求。",
+    "url": "https://www.worldwildlife.org/about/careers/"
+  }
+];
+    const dialog = document.getElementById('opportunitiesDialog');
+    const search = document.getElementById('opportunitiesSearch');
+    const region = document.getElementById('opportunitiesRegion');
+    const filters = document.getElementById('opportunitiesFilters');
+    const grid = document.getElementById('opportunitiesGrid');
+    let type = '全部';
+    ['全部','志愿者','实习','全职','项目与资助'].forEach(name => {
+      const button = document.createElement('button'); button.type = 'button'; button.textContent = name;
+      button.setAttribute('aria-pressed', String(name === type));
+      button.addEventListener('click', () => {
+        type = name;
+        [...filters.children].forEach(b => b.setAttribute('aria-pressed', String(b.textContent === type)));
+        render();
+      }); filters.append(button);
+    });
+    function element(tag, text, className) {
+      const el = document.createElement(tag); el.textContent = text;
+      if (className) el.className = className;
+      return el;
+    }
+    function render() {
+      const keyword = search.value.trim().toLocaleLowerCase();
+      const results = opportunities.filter(item => (type === '全部' || item.types.includes(type)) &&
+        (region.value === '全部' || item.region === region.value) &&
+        [item.title,item.org,item.place,item.description,...item.types].join(' ').toLocaleLowerCase().includes(keyword));
+      grid.replaceChildren();
+      results.forEach(item => {
+        const card = element('article','','tool-card');
+        const meta = element('div','','opportunity-meta');
+        meta.append(element('span',item.types.join(' / ')),element('span',item.place));
+        const link = element('a','查看机构入口 ↗'); link.href=item.url; link.target='_blank'; link.rel='noopener noreferrer';
+        link.setAttribute('aria-label','查看 '+item.org+' 招募或参与入口（新标签页）');
+        card.append(meta,element('h3',item.title),element('div',item.org,'opportunity-org'),element('p',item.description),
+          element('div','机构栏目 · 招募状态请查看原文','opportunity-status'),link);
+        grid.append(card);
+      });
+      document.getElementById('opportunitiesCount').textContent='显示 '+results.length+' / '+opportunities.length+' 个机会入口';
+      document.getElementById('opportunitiesEmpty').hidden=results.length>0;
+    }
+    document.getElementById('opportunitiesBtn').addEventListener('click',()=>{dialog.showModal();search.focus();});
+    document.getElementById('opportunitiesClose').addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('click',event=>{
+      const rect=dialog.getBoundingClientRect();
+      if(event.target===dialog&&(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)) dialog.close();
+    });
+    search.addEventListener('input',render); region.addEventListener('change',render); render();
+  })();
+  </script>
+
 </body>
 </html>
