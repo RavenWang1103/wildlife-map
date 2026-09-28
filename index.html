@@ -639,7 +639,7 @@
       // 重建统计图表（语言变化需要更新标签）
       if (rankChart || catChart) { rankChart = catChart = null; if (currentTab === "stats") renderStats(); }
       // 更新地图标题
-      if (chart && geo) chart.setOption(buildMapOption(true), true);
+      if (chart && geo) chart.setOption(buildMapOption(), true);
     }
     document.getElementById("langSwitch").addEventListener("click", function (e) {
       const btn = e.target.closest(".lang-btn"); if (!btn) return;
@@ -703,17 +703,15 @@
       return pts;
     }
 
-    // 构建完整地图 option；withVmap=false 时不带 visualMap，
-    // 避免其颜色映射在渲染层覆盖 itemStyle.areaColor（ECharts visualMap 优先级更高）
-    function buildMapOption(withVmap) {
+    // 构建完整地图 option（visualMap 始终存在，见下方注释）
+    function buildMapOption() {
       const useRisk = mapMode === "risk";
       const data = geo.features.map(f => {
         const name = f.properties.name;
         if (highlightSpecies) {
+          // 高亮态只给数值（0=非分布 / 1=分布），配色交给 visualMap 两色映射
           const hit = highlightSpecies.provinces.includes(name);
-          return hit
-            ? { name, value: countByProvince[name] || 1, itemStyle: { areaColor: "#14532d" } }
-            : { name, value: 0, itemStyle: { areaColor: cssVar("--map-muted") } };
+          return { name, value: hit ? 1 : 0 };
         }
         const base = useRisk ? riskCount[name] || 0 : countByProvince[name] || 0;
         return { name, value: base };
@@ -724,6 +722,21 @@
       const range = useRisk
         ? { text: [t("gradRiskMuch"), t("gradRiskFew")], colors: ["#fdece3", "#f7c9b3", "#e8895e", "#c94f30", "#8c1c13"] }
         : { text: [t("gradRich"), t("gradPoor")], colors: ["#eef4e6", "#c9e3c4", "#8ec592", "#4b9d63", "#1e6f43"] };
+      // visualMap 必须始终存在：省份地块由 geo 组件绘制（map series 通过 geoIndex 绑定，
+      // 它自己的 itemStyle 不生效），唯一的填色来源就是 visualMap 的视觉映射；
+      // 一旦缺席，地块会回落到 geo.itemStyle.areaColor(transparent)，整张地图变成透明而"消失"。
+      // 因此高亮态不再删除 visualMap，而是换成两色映射（0=非分布 muted，1=分布 深绿），
+      // 语义与原来的双色 itemStyle 一致，且不影响 geo/series 的取景与布局。
+      const vmap = highlightSpecies ? {
+        min: 0, max: 1, show: false, seriesIndex: 0,
+        inRange: { color: [cssVar("--map-muted"), "#14532d"] }
+      } : {
+        min: 0, max: maxV,
+        left: 16, bottom: 16, orient: "vertical", itemWidth: 12, itemHeight: 90,
+        text: range.text, textGap: 12, textStyle: { color: cssVar("--tx-3"), fontSize: 11 },
+        seriesIndex: 0, // 仅作用于 map series，否则会把保护区散点按数值重新染色
+        inRange: { color: range.colors }
+      };
       return {
         tooltip: {
           trigger: "item", backgroundColor: "rgba(27,67,50,0.95)", borderColor: "#1b4332",
@@ -760,13 +773,7 @@
           itemStyle: { areaColor: "transparent", borderColor: "transparent" },
           emphasis: { disabled: true }
         },
-        visualMap: withVmap ? {
-          min: 0, max: maxV,
-          left: 16, bottom: 16, orient: "vertical", itemWidth: 12, itemHeight: 90,
-          text: range.text, textGap: 12, textStyle: { color: cssVar("--tx-3"), fontSize: 11 },
-          seriesIndex: 0, // 仅作用于 map series，否则会把保护区散点按数值重新染色
-          inRange: { color: range.colors }
-        } : undefined,
+        visualMap: vmap,
         series: [{
           type: "map", geoIndex: 0, selectedMode: false,
           itemStyle: { borderColor: "#ffffff", borderWidth: 1, areaColor: cssVar("--map-muted") },
@@ -792,8 +799,8 @@
       // notMerge 重建会重置 geo 的 zoom，故标签显隐与点位尺寸一并复位
       labelShow = true;
       resSymbolSize = RES_SYMBOL_BASE;
-      // notMerge 重建，高亮时移除 visualMap 使双色 itemStyle 生效
-      chart.setOption(buildMapOption(!highlightSpecies), true);
+      // notMerge 重建，高亮配色由 visualMap 两色映射承担（不再是删掉 visualMap）
+      chart.setOption(buildMapOption(), true);
       const banner = document.getElementById("highlightBanner");
       if (highlightSpecies) {
         document.getElementById("highlightText").textContent =
@@ -992,7 +999,7 @@
       if (highlightSpecies) clearHighlight();
       labelShow = true; // notMerge 重建会重置 geo 的 zoom，标签与点位尺寸一并复位
       resSymbolSize = RES_SYMBOL_BASE;
-      if (chart && geo) chart.setOption(buildMapOption(true), true);
+      if (chart && geo) chart.setOption(buildMapOption(), true);
       renderPanel();
     }
     document.getElementById("modeCountBtn").addEventListener("click", () => setMapMode("count"));
@@ -1340,7 +1347,7 @@
 
     function renderChart() {
       chart = echarts.init(document.getElementById("mapChart"));
-      chart.setOption(buildMapOption(true));
+      chart.setOption(buildMapOption());
       chart.on("click", function (params) {
         if (!params) return;
         if (params.seriesType === "effectScatter") {
